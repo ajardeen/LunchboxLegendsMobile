@@ -1,48 +1,41 @@
 import React, { useEffect, useRef } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Animated,
-  Easing,
-  Pressable,
-} from "react-native";
+import { StyleSheet, Text, View, Animated } from "react-native";
+import { Image } from "expo-image";
 import CustomPressable from "../components/UI/CustomPressable";
 import { useRouter } from "expo-router";
 
 const PaymentSuccessScreen = ({ navigation }) => {
   const router = useRouter();
 
-  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const gifFadeAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 600,
-        easing: Easing.out(Easing.exp),
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    // Animate GIF to fade in after 0.5s
+    Animated.timing(gifFadeAnim, {
+      toValue: 1,
+      scale: 2,
+      duration: 300, // A quick fade for the GIF
+      delay: 500, // User request: appear after .5 sec
+      useNativeDriver: true,
+    }).start();
+
+    // Animate the text and button to fade in after the GIF appears
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 600,
+      delay: 800, // Start after the GIF animation begins (500ms + 300ms)
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   return (
     <View style={styles.container}>
-      <Animated.View
-        style={[
-          styles.circle,
-          {
-            transform: [{ scale: scaleAnim }],
-          },
-        ]}
-      >
-        <Text style={styles.check}>✓</Text>
+      <Animated.View style={{ opacity: gifFadeAnim }}>
+        <Image
+          source={require("../assets/payment_success.gif")}
+          style={styles.gif}
+        />
       </Animated.View>
 
       <Animated.View style={{ opacity: fadeAnim, marginTop: 20 }}>
@@ -74,21 +67,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 20,
   },
-  circle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#2ecc71",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#2ecc71",
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-  },
-  check: {
-    color: "#fff",
-    fontSize: 60,
-    fontWeight: "700",
+  gif: {
+    width: 180,
+    height: 180,
+    marginBottom: 0, // Add some space below the GIF
   },
   title: {
     fontSize: 22,
