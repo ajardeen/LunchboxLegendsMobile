@@ -12,9 +12,13 @@ export default function RootLayout() {
         {/* Optional status bar styling */}
         <StatusBar style="dark" backgroundColor="#fff" />
 
-        <Stack screenOptions={{ headerShown: false,animation: 'slide_from_right', }}>
+        <Stack
+          screenOptions={{ headerShown: false, animation: "slide_from_right" }}
+        >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="itemDetail" />
+          <Stack.Screen name="myCart" />
+          <Stack.Screen name="PaymentSuccessScreen" />
         </Stack>
       </SafeAreaView>
     </SafeAreaProvider>

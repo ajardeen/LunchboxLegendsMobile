@@ -1,7 +1,7 @@
 {
   "name": "lunchboxlegendsmobile",
   "version": "1.0.0",
-    "main": "expo-router/entry",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -20,6 +20,5 @@
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0"
   },
-
   "private": true
 }
