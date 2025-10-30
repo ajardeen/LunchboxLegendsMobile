@@ -1,15 +1,9 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Platform,
-  Pressable,
-  Animated,
-} from "react-native";
+import { Text, StyleSheet, Platform, Pressable, Animated } from "react-native";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 
 export default function SubscriptionCard({
   item,
@@ -17,64 +11,71 @@ export default function SubscriptionCard({
   handlePressOut,
   animatedValue,
 }) {
+  const router = useRouter();
+  const placeholderImage = require("../assets/lblplaceholder.jpg");
+
+  // Determine tag color based on category
+  const getTagColor = (category) => {
+    if (category === "veg") return "#00A86B"; // Green for Veg
+    if (category === "non-veg") return "#FF4500"; // Red for Non-Veg
+    if (category === "mix") return "#FF8C00"; // Orange for Mix
+    return "#4B5563"; // Default gray
+  };
+
+  const tagColor = getTagColor(item.category);
+
+  const goToDetail = () => {
+    router.push({
+      pathname: "/itemDetail",
+      params: {
+        bundleId: item.id,
+      },
+    });
+  };
+
   return (
-    <Link
-      href={{
-        pathname: "/itemDetail",
-        params: {
-          title: item.title,
-          imageUri: item.image,
-          price: item.price,
-          tag: item.tag,
-          tagColor: item.tagColor,
-        },
-      }}
-      asChild
+    <Pressable
+      onPressIn={() => handlePressIn(item.id)}
+      onPressOut={() => handlePressOut(item.id)}
+      onPress={goToDetail}
     >
-      <Pressable
-        onPressIn={() => handlePressIn(item.id)}
-        onPressOut={() => handlePressOut(item.id)}
+      <Animated.View
+        style={[styles.card, { transform: [{ scale: animatedValue }] }]}
       >
-        <Animated.View
-          style={[styles.card, { transform: [{ scale: animatedValue }] }]}
-        >
-          {/* Top Image */}
-          <Image
-            source={{ uri: item.image }}
-            style={styles.cardImage}
-            contentFit="cover"
-            transition={500}
-          />
+        <Image
+          source={
+            item.bundleImage ? { uri: item.bundleImage } : placeholderImage
+          }
+          style={styles.cardImage}
+          contentFit="cover"
+          transition={300}
+        />
 
-          {/* Bottom Content Layer */}
-          <View style={styles.bottomContent}>
-            <View style={styles.titleRow}>
-              <Text style={styles.titleText}>{item.title}</Text>
-              <View style={styles.tagWrapper}>
-                <View
-                  style={[styles.tagDot, { backgroundColor: item.tagColor }]}
-                />
-                <Text style={[styles.tagText, { color: item.tagColor }]}>
-                  {item.tag}
-                </Text>
+        <View style={styles.bottomContent}>
+          <View style={styles.titleRow}>
+            <Text style={styles.titleText}>{item.name}</Text>
+            <View style={styles.tagWrapper}>
+              <View style={styles.tagIconWrapper}>
+                <View style={[styles.tagDot, { backgroundColor: tagColor }]} />
               </View>
-            </View>
-
-
-            <View style={styles.priceRow}>
-            
-            <Text style={styles.subtitleText} numberOfLines={2}>
-              {item.subtitle}
-            </Text>
-              <View style={styles.ratingRow}>
-                <Ionicons name="star" size={12} color={item.tagColor} />
-                <Text style={styles.ratingText}>4.5</Text>
-              </View>
+              <Text style={[styles.tagText, { color: tagColor }]}>
+                {item.category}
+              </Text>
             </View>
           </View>
-        </Animated.View>
-      </Pressable>
-    </Link>
+
+          <View style={styles.subtitleRow}>
+            <Text style={styles.subtitleText} numberOfLines={2}>
+              {/* {item.description} */}
+            </Text>
+            {/* <View style={styles.ratingRow}>
+              <Ionicons name="star" size={12} color={item.tagColor} />
+              <Text style={styles.ratingText}>4.5</Text>
+            </View> */}
+          </View>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 
@@ -110,13 +111,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   titleText: {
-    fontSize: 18,
-    fontWeight: "700",
+    fontSize: 20,
+    fontWeight: "bold",
     color: "#111827",
   },
   tagWrapper: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  tagIconWrapper: {
+    padding: 2,
+    boxShadowColor: "#000",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   tagDot: {
     marginRight: 4,
@@ -133,7 +143,7 @@ const styles = StyleSheet.create({
     color: "#4B5563",
     fontSize: 13,
   },
-  priceRow: {
+  subtitleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",

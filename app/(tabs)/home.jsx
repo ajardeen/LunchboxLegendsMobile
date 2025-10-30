@@ -8,58 +8,27 @@ import {
   Animated,
 } from "react-native";
 import { useState } from "react";
-import AdBanner from "../../components/AdBanner"; // Assuming this path is correct
+import AdBanner from "../../components/AdBanner";
 import SubscriptionCard from "../../components/SubscriptionCard";
+import { bundleData } from "../../services/data";
 
 export default function Home() {
+  const [data, setData] = useState(bundleData);
   const [active, setActive] = useState("ALL");
-  const tabs = ["ALL", "Breakfast", "Lunch"];
-  const name = "Kai Suvai";
+  const tabs = ["ALL", "Veg", "Non Veg"];
+  const name = "Lunchbox Legends";
   const location = "Tecci Park";
 
-  // Note: Using a single placeholder image for all cards since the original code did.
-  const items = [
-    {
-      id: 1,
-      title: "5 Days Pack",
-      subtitle: "We know your taste",
-      image:
-        "https://res.cloudinary.com/dgfaeq5fm/image/upload/v1761586513/image_2_ig8u2s.png",
-      tag: "Pure Veg",
-      tagColor: "#00A86B",
-    },
-    {
-      id: 2,
-      title: "Monthly Pack",
-      subtitle: "We know your taste",
-      image:
-        "https://res.cloudinary.com/dgfaeq5fm/image/upload/v1761586514/image_1_wrzkxz.png",
-      tag: "Non Veg",
-      tagColor: "#FF4500",
-    },
-    {
-      id: 3,
-      title: "Snacks",
-      subtitle: "We know your taste",
-      image:
-        "https://res.cloudinary.com/dgfaeq5fm/image/upload/v1761586514/image_3_x7f31c.png",
-      tag: "Pure Veg",
-      tagColor: "#00A86B",
-    },
-    {
-      id: 4,
-      title: "Snacks",
-      subtitle: "We know your taste",
-      image:
-        "https://res.cloudinary.com/dgfaeq5fm/image/upload/v1761586514/image_3_x7f31c.png",
-      tag: "Pure Veg",
-      tagColor: "#00A86B",
-    },
-  ];
+  const filteredBundles = data.bundles.filter((bundle) => {
+    if (active === "ALL") return true;
+    if (active === "Veg") return bundle.category === "veg";
+    if (active === "Non Veg")
+      return bundle.category === "non-veg" || bundle.category === "mix";
+    return false;
+  });
 
   // Animated values for card scaling
-  // We'll create a ref to store Animated.Value for each item dynamically
-  const animatedValues = items.reduce((acc, item) => {
+  const animatedValues = data.bundles.reduce((acc, item) => {
     acc[item.id] = new Animated.Value(1);
     return acc;
   }, {});
@@ -79,7 +48,8 @@ export default function Home() {
   };
 
   return (
-    <ScrollView style={styles.scrollView}>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+
       {/* Header */}
       <View style={styles.headerContainer}>
         <Text style={[styles.headerTitle, styles.textWhite]}>{name}</Text>
@@ -122,7 +92,7 @@ export default function Home() {
 
         {/* Item Cards */}
         <View style={styles.itemCardsContainer}>
-          {items.map((item) => (
+          {filteredBundles.map((item) => (
             <SubscriptionCard
               key={item.id}
               item={item}
@@ -138,8 +108,8 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
-    flex: 1,
+  scrollViewContent: {
+    flexGrow: 1,
     backgroundColor: "#004346",
   },
   headerContainer: {
@@ -154,39 +124,42 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   headerLocation: {
-    color: "#D1D5DB", // gray-300
+    color: "#D1D5DB",
   },
   filterSection: {
+    flex: 1,
     marginTop: 16,
-    borderTopLeftRadius: 24, // rounded-t-3xl
-    borderTopRightRadius: 24, // rounded-t-3xl
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     backgroundColor: "#fff",
     paddingBottom: 12,
     paddingTop: 20,
+    minHeight: "100%", // 👈 ensures full height when content is short
   },
   tabsScrollView: {
     paddingHorizontal: 16,
     paddingLeft: 24,
+    maxHeight: 40,
   },
   tabButton: {
     marginRight: 12,
-    borderRadius: 9999, // rounded-full
-    borderWidth: 1, // border
-    paddingHorizontal: 20, // px-5
-    paddingVertical: 8, // py-2
+    borderRadius: 9999,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
   activeTabButton: {
     borderColor: "#004D40",
     backgroundColor: "#004D40",
   },
   inactiveTabButton: {
-    borderColor: "#D1D5DB", // border-gray-300
+    borderColor: "#D1D5DB",
   },
   tabText: {
-    fontWeight: "500", // font-medium
+    fontWeight: "500",
   },
   inactiveText: {
-    color: "#374151", // text-gray-700
+    color: "#374151",
   },
   itemCardsContainer: {
     marginTop: 16,
@@ -194,3 +167,4 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 });
+

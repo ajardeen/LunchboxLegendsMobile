@@ -28,6 +28,7 @@ export default function Order() {
 
   const renderOrderCard = (item) => (
     <Link
+      key={item.id}
       href={{
         pathname: "/orderTracker",
         params: {
@@ -39,7 +40,7 @@ export default function Order() {
       }}
       asChild
     >
-      <Pressable key={item.id} style={styles.orderCard}>
+      <Pressable style={styles.orderCard}>
         <View style={styles.orderLeft}>
           <Text style={styles.orderTitle}>Order Item</Text>
           <Text style={styles.orderSubtitle}>{item.title}</Text>

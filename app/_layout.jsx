@@ -13,7 +13,14 @@ export default function RootLayout() {
         <StatusBar style="dark" backgroundColor="#fff" />
 
         <Stack
-          screenOptions={{ headerShown: false, animation: "slide_from_right" }}
+          screenOptions={{
+            headerShown: false,
+            animation: "slide_from_right",
+            animationDuration: 50,
+            animationTypeForReplace: "push",
+            gestureEnabled: true,
+            lazy: false,
+          }}
         >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="itemDetail" />

@@ -1,102 +1,50 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Platform,
 } from "react-native";
-import { useLocalSearchParams, router, Stack } from "expo-router";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import CustomPressable from "../components/UI/CustomPressable";
-import { useRouter } from "expo-router";
+import { bundleData } from "../services/data";
 
 export default function ItemDetail() {
   const router = useRouter();
-
-  // Use useLocalSearchParams to retrieve the data passed from the home screen
   const params = useLocalSearchParams();
+  const { bundleId } = params;
 
-  // Extract parameters and provide default/fallback values
-  const {
-    title,
-    imageUri,
-    tag = "N/A",
-    tagColor = "#000000", // Default black if color is missing
-    price = "1399", // Default price, will be used in the footer
-  } = params;
-
-  // Static Data to populate the daily menu, as seen in the image
-  const menuItems = [
-    {
-      day: "Monday",
-      meal: "Dal Fry + Rice + Chapati",
-      weight: "460g",
-      cal: "650 Cal",
-      delivery: "12:00 PM",
-      isVeg: true,
-    },
-    {
-      day: "Tuesday",
-      meal: "Dal Fry + Rice + Chapati",
-      weight: "460g",
-      cal: "650 Cal",
-      delivery: "12:00 PM",
-      isVeg: true,
-    },
-    {
-      day: "Wednesday",
-      meal: "Chicken Curry + Rice",
-      weight: "500g",
-      cal: "720 Cal",
-      delivery: "12:00 PM",
-      isVeg: false,
-    },
-    {
-      day: "Thursday",
-      meal: "Chicken Curry + Rice",
-      weight: "500g",
-      cal: "720 Cal",
-      delivery: "12:00 PM",
-      isVeg: false,
-    },
-    {
-      day: "Friday",
-      meal: "Chicken Curry + Rice",
-      weight: "500g",
-      cal: "720 Cal",
-      delivery: "12:00 PM",
-      isVeg: false,
-    },
-  ];
-
-  // State for toggling between Non Veg / Veg menu view (implied by image)
-  const [isNonVeg, setIsNonVeg] = useState(false);
-
-  // Filter items based on the toggle (assuming a simple filter for this example)
-  const filteredMenuItems = menuItems.filter((item) =>
-    isNonVeg ? !item.isVeg : item.isVeg
+  // Find the selected bundle from the main data source
+  const item = useMemo(
+    () => bundleData.bundles.find((b) => b.id === bundleId),
+    [bundleId]
   );
+
+  if (!item) {
+    return (
+      <View style={styles.container}>
+        <Text>Item not found!</Text>
+      </View>
+    );
+  }
+
+  const placeholderImage = require("../assets/lblplaceholder.jpg");
 
   return (
     <View style={styles.container}>
-      {/* 1. Header and Image Container (Fixed Height) */}
       <View style={styles.headerImageContainer}>
         <Image
-          source={{
-            uri:
-              imageUri ||
-              "https://placehold.co/600x400/000000/ffffff?text=Image+Missing",
-          }}
+          source={
+            item.bundleImage ? { uri: item.bundleImage } : placeholderImage
+          }
           style={styles.mainImage}
           contentFit="cover"
         />
 
-        {/* Overlay Content & Close Button */}
         <View style={styles.overlay}>
-          {/* Close Button (Absolute Position) */}
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.closeButton}
@@ -104,77 +52,63 @@ export default function ItemDetail() {
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
 
-          {/* Title Text */}
           <View style={styles.titleContent}>
-            <Text style={styles.itemTitle}>{title || "Monthly Pack"}</Text>
-            <Text style={styles.itemSubtitle}>We know your taste</Text>
+            <Text style={styles.itemTitle}>{item.name}</Text>
+            <Text style={styles.itemSubtitle}>{item.description}</Text>
 
-            {/* Veg/Non-Veg Toggle (simplified for UI) */}
-            <View style={styles.tagToggleRow}>
-              <Text style={styles.tagTextSmall}>{tag}</Text>
-              <Text style={styles.tagTextSmallDivider}> | </Text>
-              <Text style={styles.tagTextSmall}>
-                {isNonVeg ? "Non Veg" : "Veg"}
-              </Text>
-            </View>
+            <Text style={styles.tagTextSmall}>{item.category}</Text>
           </View>
         </View>
       </View>
 
-      {/* 2. Scrollable Content Area */}
       <ScrollView style={styles.scrollArea}>
         <View style={styles.menuHeader}>
-          <Text style={styles.menuHeaderText}>
-            {isNonVeg ? "Non Veg Meals" : "Veg Meals"}
-          </Text>
+          <Text style={styles.menuHeaderText}>Daily Menu</Text>
         </View>
 
-        {/* Menu Items List */}
-        {filteredMenuItems.map((item, index) => (
-          <CustomPressable key={index} style={styles.menuItemCard}>
-            {/* The CustomPressable component now handles the animation and styling */}
-            <>
-              {/* Left Content */}
+        {item.days.map((day, index) => (
+          <CustomPressable
+            key={index}
+            style={styles.dayCard}
+            onPress={() =>
+              router.push({
+                pathname: "/dayMenuList",
+                params: { bundleId: item.id, day: day.day },
+              })
+            }
+          >
+            <View style={styles.dayCardLeft}>
               <View>
-                <Text style={styles.dayText}>{item.day}</Text>
-                <Text style={styles.mealText}>{item.meal}</Text>
-
-                <View style={styles.deliveryRow}>
-                  <Ionicons name="time-outline" size={14} color="#004346" />
-                  <Text style={styles.deliveryTime}>
-                    Delivery at: {item.delivery}
-                  </Text>
-                  {/* Veg/Non-Veg Icon (Red Box) */}
-                  <View
-                    style={item.isVeg ? styles.vegSquare : styles.nonVegSquare}
-                  />
-                </View>
+                <Text style={styles.dayCardDayText}>{day.day}</Text>
+                <Text style={styles.dayCardMenuName}>{day.menuName}</Text>
               </View>
-
-              {/* Right Content */}
-              <View style={styles.rightContent}>
-                <Text style={styles.weightText}>{item.weight}</Text>
-                <Text style={styles.calText}>{item.cal}</Text>
-                <CustomPressable style={styles.addButton}>
+            </View>
+            <View style={styles.dayCardRight}>
+              <View style={styles.dayCardChevron}>
+                <Text style={styles.dayCardNutrition}>
+                  {day.totalNutrition.calories} Cal
+                </Text>
+                <CustomPressable
+                  style={styles.addButton}
+                  onPress={() => console.log("Add on for", day.day)}
+                >
                   <Text style={styles.addButtonText}>Add on</Text>
                 </CustomPressable>
               </View>
-            </>
+            </View>
           </CustomPressable>
         ))}
       </ScrollView>
 
-      {/* 3. Fixed Bottom Button */}
       <View style={styles.footer}>
         <CustomPressable
           onPress={() => router.push("/myCart")}
           style={styles.addToCardBtn}
         >
-          <Text style={styles.subscribeText}>Add to Cart</Text>
+          <Text style={styles.subscribeText}>Add to Cart - ₹{item.price}</Text>
         </CustomPressable>
       </View>
 
-      {/* Ensure header is not shown by Stack, since we made a custom one */}
       <Stack.Screen options={{ headerShown: false }} />
     </View>
   );
@@ -188,7 +122,7 @@ const styles = StyleSheet.create({
 
   // --- 1. Header/Image/Overlay Styles ---
   headerImageContainer: {
-    height: 150, // Fixed height for the banner
+    height: 200,
     width: "100%",
   },
   mainImage: {
@@ -198,7 +132,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)", // Dark overlay on image
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     padding: 20,
     justifyContent: "space-between",
   },
@@ -220,7 +154,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   titleContent: {
-    // Content is at the bottom of the overlay container (due to space-between)
     position: "absolute",
     bottom: 20,
     left: 20,
@@ -245,19 +178,13 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#E5E5E5",
   },
-  tagTextSmallDivider: {
-    fontSize: 14,
-    color: "#E5E5E5",
-    marginHorizontal: 5,
-  },
 
   // --- 2. Scrollable Content Styles ---
   scrollArea: {
-    flex: 1,
-    backgroundColor: "", // Black background for the scroll area
+    flex: 1, // Keep this!
     paddingHorizontal: 15,
     paddingTop: 10,
-    maxHeight: 500,
+    marginBottom: 100,
   },
   menuHeader: {
     marginBottom: 15,
@@ -265,14 +192,62 @@ const styles = StyleSheet.create({
   menuHeaderText: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#111827", // Changed from white to a dark color for visibility
+    color: "#111827",
     paddingVertical: 10,
-    fontStyle: "italic", // Approximation for the script font look
+  },
+  dayCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  dayCardLeft: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingRight: 10,
+  },
+  dayCardDayText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111827",
+    textTransform:"capitalize",
+  },
+  dayCardMenuName: {
+    fontSize: 16,
+    color: "#004346",
+    textTransform:"capitalize",
+    marginTop: 2,
+    
+  },
+  dayCardRight: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dayCardChevron: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  },
+  dayCardNutrition: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginRight: 8,
+  },
+
+  // --- Old Styles for reference in dayMenuList.jsx ---
+  dayContainer: {
+    marginBottom: 20,
   },
   menuItemCard: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#F8F8FF", // Dark card background
+    backgroundColor: "#F8F8FF",
     borderRadius: 12,
     padding: 15,
     marginBottom: 10,
@@ -286,12 +261,11 @@ const styles = StyleSheet.create({
   dayText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#004346",
+    color: "#004D40",
     marginBottom: 5,
   },
   mealText: {
     fontSize: 16,
-    color: "#000000ff",
     marginBottom: 8,
   },
   deliveryRow: {
@@ -299,11 +273,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   deliveryTime: {
-    fontSize: 12,
-    color: "#004346",
-    fontWeight: "600",
-    marginLeft: 4,
-    marginRight: 10,
+    // This style is no longer used with the new data structure
+  },
+  nutritionText: {
+    marginLeft: 8,
   },
   vegSquare: {
     width: 12,
@@ -324,23 +297,19 @@ const styles = StyleSheet.create({
   rightContent: {
     alignItems: "flex-end",
   },
-  weightText: {
+  quantityText: {
     fontSize: 14,
-    color: "#6B7280", // Improved contrast for better readability
-  },
-  calText: {
-    fontSize: 14,
-    color: "#6B7280", // Improved contrast for better readability
+    color: "#6B7280",
     marginBottom: 5,
   },
   addButton: {
     backgroundColor: "#000",
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 5,
-    marginTop: 5,
-    borderWidth: 1,
-    borderColor: "#fff",
+    paddingVertical: 6,
+    alignSelf: "flex-start", // To make button only as wide as its content
+    // borderWidth: 1,
+    // borderColor: "#fff",
   },
   addButtonText: {
     color: "#fff",
@@ -356,18 +325,9 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 20,
     paddingVertical: 15,
-    // Top shadow for the footer to lift it off the content
-    ...Platform.select({
-      ios: {
-        shadowColor: "#fff",
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 10, // Android shadow
-      },
-    }),
+    backgroundColor: "#fff", // Ensure footer has a background
+    borderTopWidth: 1,
+    borderColor: "#e5e7eb",
   },
   addToCardBtn: {
     backgroundColor: "#1E1E1E", // Dark button color
