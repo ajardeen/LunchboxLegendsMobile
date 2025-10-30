@@ -8,15 +8,14 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import CustomPressable from "../components/UI/CustomPressable";
 import { bundleData } from "../services/data";
+import CategoryIcon from "../components/CategoryIcon";
 
 export default function DayMenuList() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { bundleId, day: dayName } = params;
 
-  // Find the selected day's data from the main data source
   const dayData = useMemo(() => {
     const bundle = bundleData.bundles.find((b) => b.id === bundleId);
     if (!bundle) return null;
@@ -35,7 +34,7 @@ export default function DayMenuList() {
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Custom Header */}
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => router.back()}
@@ -47,37 +46,27 @@ export default function DayMenuList() {
       </View>
 
       <ScrollView style={styles.scrollArea}>
-        <View style={styles.menuHeader}>
-          <Text style={styles.menuHeaderText}>{dayData.menuName}</Text>
-        </View>
+        <Text style={styles.menuHeaderText}>{dayData.menuName}</Text>
 
-        {/* Menu Items List */}
-        {dayData.items.map((menuItem, itemIndex) => (
-          <CustomPressable key={itemIndex} style={styles.menuItemCard}>
-            <View>
+        {/* Menu List */}
+        {dayData.items.map((menuItem, i) => (
+          <View key={i} style={styles.menuItemRow}>
+            <View style={styles.itemLeft}>
               <Text style={styles.mealText}>{menuItem.itemName}</Text>
               <View style={styles.nutritionRow}>
-                <View
-                  style={
-                    menuItem.category === "veg"
-                      ? styles.vegSquare
-                      : styles.nonVegSquare
-                  }
-                />
                 <Text style={styles.nutritionText}>
                   {menuItem.nutrition.calories} Cal
                 </Text>
               </View>
             </View>
-            <View style={styles.rightContent}>
+
+            <View style={styles.itemRight}>
               <Text style={styles.quantityText}>
                 {menuItem.quantity} {menuItem.uom}
               </Text>
-              <CustomPressable style={styles.addButton}>
-                <Text style={styles.addButtonText}>Add on</Text>
-              </CustomPressable>
+              <CategoryIcon type={menuItem.category} size={14} />
             </View>
-          </CustomPressable>
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -87,7 +76,7 @@ export default function DayMenuList() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
@@ -109,35 +98,29 @@ const styles = StyleSheet.create({
   scrollArea: {
     flex: 1,
     paddingHorizontal: 15,
-    paddingTop: 10,
-  },
-  menuHeader: {
-    marginBottom: 15,
   },
   menuHeaderText: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#111827",
-    paddingVertical: 10,
+    marginVertical: 15,
   },
-  menuItemCard: {
+  menuItemRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    backgroundColor: "#F8F8FF",
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  itemLeft: {
+    flex: 1,
   },
   mealText: {
     fontSize: 16,
     fontWeight: "600",
-    marginBottom: 8,
+    marginBottom: 4,
+    color: "#111827",
   },
   nutritionRow: {
     flexDirection: "row",
@@ -145,44 +128,17 @@ const styles = StyleSheet.create({
   },
   nutritionText: {
     marginLeft: 8,
-    color: "#4B5563",
+    color: "#6B7280",
+    fontSize: 13,
   },
-  vegSquare: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: "#00A86B",
-    backgroundColor: "#00A86B",
-  },
-  nonVegSquare: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-    borderWidth: 1,
-    borderColor: "#FF4500",
-    backgroundColor: "#FF4500",
-  },
-  rightContent: {
+ 
+  itemRight: {
     alignItems: "flex-end",
+    flexDirection: "column",
+    gap: 3,
   },
   quantityText: {
     fontSize: 14,
     color: "#6B7280",
-    marginBottom: 5,
-  },
-  addButton: {
-    backgroundColor: "#000",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    marginTop: 5,
-    borderWidth: 1,
-    borderColor: "#fff",
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
   },
 });

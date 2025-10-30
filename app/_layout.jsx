@@ -3,9 +3,12 @@ import { Stack } from "expo-router";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
+import { CartProvider } from "../context/CartContext";
 
 export default function RootLayout() {
   return (
+    <CartProvider>
+
     <SafeAreaProvider>
       {/* Handles status bar spacing automatically */}
       <SafeAreaView style={styles.safeArea}>
@@ -21,7 +24,7 @@ export default function RootLayout() {
             gestureEnabled: true,
             lazy: false,
           }}
-        >
+          >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="itemDetail" />
           <Stack.Screen name="myCart" />
@@ -29,6 +32,7 @@ export default function RootLayout() {
         </Stack>
       </SafeAreaView>
     </SafeAreaProvider>
+</CartProvider>
   );
 }
 

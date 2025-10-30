@@ -2,7 +2,7 @@ import React from "react";
 import { Text, StyleSheet, Platform, Pressable, Animated } from "react-native";
 import { Image } from "expo-image";
 import { View } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import CategoryIcon from "../components/CategoryIcon";
 import { useRouter } from "expo-router";
 
 export default function SubscriptionCard({
@@ -56,9 +56,9 @@ export default function SubscriptionCard({
             <Text style={styles.titleText}>{item.name}</Text>
             <View style={styles.tagWrapper}>
               <View style={styles.tagIconWrapper}>
-                <View style={[styles.tagDot, { backgroundColor: tagColor }]} />
+                <CategoryIcon type={item.category} />
               </View>
-              <Text style={[styles.tagText, { color: tagColor }]}>
+              <Text style={[styles.tagText, { color: tagColor,textTransform: "capitalize"}]}>
                 {item.category}
               </Text>
             </View>
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     }),
   },
   cardImage: {
-    height: 122,
+    height: 110,
     width: "100%",
   },
   bottomContent: {
@@ -137,9 +137,10 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     fontWeight: "500",
+    marginLeft: 4,
   },
   subtitleText: {
-    marginTop: 4,
+    marginTop: 1,
     color: "#4B5563",
     fontSize: 13,
   },

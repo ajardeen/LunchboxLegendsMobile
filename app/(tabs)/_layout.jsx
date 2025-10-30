@@ -13,7 +13,6 @@ export default function TabsLayout() {
           backgroundColor: "#fff", // from tabBarStyle: { backgroundColor: "#fff", ... }
           paddingBottom: 5, // from tabBarStyle: { ..., paddingBottom: 5 }
         },
-        
       }}
     >
       <Tabs.Screen
@@ -30,6 +29,7 @@ export default function TabsLayout() {
         }}
       />
 
+     
       <Tabs.Screen
         name="order"
         options={{
@@ -43,6 +43,20 @@ export default function TabsLayout() {
           ),
         }}
       />
+       <Tabs.Screen
+        name="myCart"
+        options={{
+          title: "Cart",
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? "cart" : "cart-outline"}
+              color={color}
+              size={size}
+            />
+          ),
+        }}
+      />
+
 
       <Tabs.Screen
         name="profile"
