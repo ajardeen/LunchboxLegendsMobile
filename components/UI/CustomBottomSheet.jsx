@@ -2,21 +2,24 @@ import React, { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 
-const CustomBottomSheet = forwardRef(({ children, title }, ref) => {
+const CustomBottomSheet = forwardRef(({ children, title ,initialIndex}, ref) => {
   const sheetRef = useRef(null);
-  const snapPoints = useMemo(() => ["25%", "50%"], []);
+  // snapPoints: ["45%" (index 0), "75%" (index 1)]
+  const snapPoints = useMemo(() => ["45%", "75%"], []);
 
   useImperativeHandle(ref, () => ({
-    open: () => sheetRef.current?.expand(),
+    // FIX 1: Change 'open' to snap to the last snap point (index 1 which is "75%")
+    open: () => sheetRef.current?.snapToIndex(snapPoints.length - 1),
     close: () => sheetRef.current?.close(),
   }));
 
   return (
     <BottomSheet
       ref={sheetRef}
-      index={-1}
-      snapPoints={snapPoints}
-      enablePanDownToClose
+      // FIX 2: Change 'index' to 0 to make "45%" the default start point
+     index={initialIndex || 0} // You can default to 0 (45%) or -1 (hidden)
+            snapPoints={snapPoints}
+            enablePanDownToClose
     >
       <BottomSheetView style={styles.contentContainer}>
         {title && <Text style={styles.title}>{title}</Text>}
