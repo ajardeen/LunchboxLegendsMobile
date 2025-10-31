@@ -17,8 +17,8 @@ import { Pressable, Animated } from "react-native";
 export default function CustomPressable({
   children,
   style,
-  scaleTo = 0.95, // Reverted to default scale down for press effect
-  duration = 150, // Reverted to default duration for smoother animation
+  scaleTo = 0.98, // Reverted to default scale down for press effect
+  duration = 0, // Reverted to default duration for smoother animation
   onPressIn,
   onPressOut,
   ...rest

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,9 +12,15 @@ import { useRouter } from "expo-router";
 import { useCart } from "../../context/CartContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import CustomBottomSheet from "../../components/UI/CustomBottomSheet";
+import AddressChangeSheet from "../../components/AddressChangeSheet";
+import CartItemDetailSheet from "../../components/CartItemDetailSheet";
 
 // --- MyCart Component ---
 const MyCart = () => {
+  const addressChangeSheetRef = useRef(null);
+  const viewCartItemsSheetRef = useRef(null);
+
   const router = useRouter();
 
   const { cartItems, subtotal, updateQuantity, removeItem, emptyCart } =
@@ -113,7 +119,8 @@ const MyCart = () => {
       </View>
       <Pressable
         onPress={() => {
-          /* Navigation to address screen */
+          console.log("change pressed");
+          addressChangeSheetRef.current?.open();
         }}
       >
         <Text style={deliveryStyles.changeText}>CHANGE</Text>
@@ -134,10 +141,25 @@ const MyCart = () => {
       </CustomPressable>
     </View>
   );
-
+  const [selectedCartItem, setSelectedCartItem] = useState(null);
+const handleViewItemDetails = (item) => {
+  console.log(item);
+  
+    // Check if item has details
+    const isDetailedItem = item.days || item.isAddOnBundle;
+    if (isDetailedItem) {
+      setSelectedCartItem(item);
+      viewCartItemsSheetRef.current?.open();
+    } else {
+      console.log("This item has no details to show.");
+    }
+  };
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 200 }}>
+      <ScrollView
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 200 }}>
         <Text style={styles.title}>
           <Ionicons name="cart-outline" size={24} color="#004346" />
           Cart
@@ -153,10 +175,18 @@ const MyCart = () => {
               {cartItems.map((item) => (
                 <View key={item.id} style={styles.itemRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.itemName}>{item.name}</Text>
-                    <Text style={styles.itemPrice}>
-                      ₹{item.price.toFixed(2)}
-                    </Text>
+                    <Pressable
+                      onPress={() => {
+                        console.log("change pressed");
+                        handleViewItemDetails(item);
+                        viewCartItemsSheetRef.current?.open();
+                      }}
+                    >
+                      <Text style={styles.itemName}>{item.name}</Text>
+                      <Text style={styles.itemPrice}>
+                        ₹{item.price.toFixed(2)}
+                      </Text>
+                    </Pressable>
                   </View>
                   <View style={styles.quantityAndClearWrapper}>
                     <Pressable onPress={() => removeItem(item.id)}>
@@ -197,7 +227,13 @@ const MyCart = () => {
                 style={styles.paymentRow}
                 onPress={() => setPaymentMethod(method.id)}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10}}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
                   <Image
                     source={method.icon}
                     style={{ width: 35, height: 35 }}
@@ -273,6 +309,34 @@ const MyCart = () => {
           </CustomPressable>
         </View>
       )}
+        <CustomBottomSheet
+        ref={addressChangeSheetRef}
+        title="Change Delivery Address"
+        snapPoints={["45%", "60%"]}
+        initialIndex={-1}
+      >
+        <AddressChangeSheet
+          addresses={addresses}
+          selectedAddressId={selectedAddress}
+          onSelectAddress={(id) => {
+            setSelectedAddress(id);
+            addressChangeSheetRef.current?.close(); // Close on select
+          }}
+          onClose={() => addressChangeSheetRef.current?.close()}
+          router={router}
+        />
+      </CustomBottomSheet>
+     <CustomBottomSheet
+        ref={viewCartItemsSheetRef}
+        title={selectedCartItem ? selectedCartItem.name : "Item Details"}
+        snapPoints={["45%", "75%"]}
+        initialIndex={-1}
+        // When sheet closes, clear the selected item
+        onClose={() => setSelectedCartItem(null)}
+      >
+        <CartItemDetailSheet item={selectedCartItem} />
+      </CustomBottomSheet>
+
     </View>
   );
 };

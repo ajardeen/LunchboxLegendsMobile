@@ -26,7 +26,6 @@ export default function RootLayout() {
             >
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="itemDetail" />
-              <Stack.Screen name="myCart" />
               <Stack.Screen name="PaymentSuccessScreen" />
             </Stack>
 

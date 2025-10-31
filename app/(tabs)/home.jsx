@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
-  Animated,
 } from "react-native";
 import { useState } from "react";
 import AdBanner from "../../components/AdBanner";
@@ -27,29 +26,8 @@ export default function Home() {
     return false;
   });
 
-  // Animated values for card scaling
-  const animatedValues = data.bundles.reduce((acc, item) => {
-    acc[item.id] = new Animated.Value(1);
-    return acc;
-  }, {});
-
-  const handlePressIn = (itemId) => {
-    Animated.spring(animatedValues[itemId], {
-      toValue: 0.95, // Scale down to 95%
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = (itemId) => {
-    Animated.spring(animatedValues[itemId], {
-      toValue: 1, // Scale back to original
-      useNativeDriver: true,
-    }).start();
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
-
       {/* Header */}
       <View style={styles.headerContainer}>
         <Text style={[styles.headerTitle, styles.textWhite]}>{name}</Text>
@@ -93,13 +71,7 @@ export default function Home() {
         {/* Item Cards */}
         <View style={styles.itemCardsContainer}>
           {filteredBundles.map((item) => (
-            <SubscriptionCard
-              key={item.id}
-              item={item}
-              handlePressIn={handlePressIn}
-              handlePressOut={handlePressOut}
-              animatedValue={animatedValues[item.id]}
-            />
+            <SubscriptionCard key={item.id} item={item} />
           ))}
         </View>
       </View>
@@ -167,4 +139,3 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 });
-

@@ -1,16 +1,12 @@
 import React from "react";
-import { Text, StyleSheet, Platform, Pressable, Animated } from "react-native";
+import { Text, StyleSheet, Platform, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { View } from "react-native";
 import CategoryIcon from "../components/CategoryIcon";
 import { useRouter } from "expo-router";
+import CustomPressable from "./UI/CustomPressable";
 
-export default function SubscriptionCard({
-  item,
-  handlePressIn,
-  handlePressOut,
-  animatedValue,
-}) {
+export default function SubscriptionCard({ item }) {
   const router = useRouter();
   const placeholderImage = require("../assets/lblplaceholder.jpg");
 
@@ -34,14 +30,8 @@ export default function SubscriptionCard({
   };
 
   return (
-    <Pressable
-      onPressIn={() => handlePressIn(item.id)}
-      onPressOut={() => handlePressOut(item.id)}
-      onPress={goToDetail}
-    >
-      <Animated.View
-        style={[styles.card, { transform: [{ scale: animatedValue }] }]}
-      >
+    <CustomPressable onPress={goToDetail}>
+      <View style={styles.card}>
         <Image
           source={
             item.bundleImage ? { uri: item.bundleImage } : placeholderImage
@@ -58,7 +48,12 @@ export default function SubscriptionCard({
               <View style={styles.tagIconWrapper}>
                 <CategoryIcon type={item.category} />
               </View>
-              <Text style={[styles.tagText, { color: tagColor,textTransform: "capitalize"}]}>
+              <Text
+                style={[
+                  styles.tagText,
+                  { color: tagColor, textTransform: "capitalize" },
+                ]}
+              >
                 {item.category}
               </Text>
             </View>
@@ -74,8 +69,8 @@ export default function SubscriptionCard({
             </View> */}
           </View>
         </View>
-      </Animated.View>
-    </Pressable>
+      </View>
+    </CustomPressable>
   );
 }
 

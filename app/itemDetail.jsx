@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Image } from "expo-image";
@@ -14,21 +14,24 @@ import CustomPressable from "../components/UI/CustomPressable";
 import { bundleData } from "../services/data";
 import CategoryIcon from "../components/CategoryIcon";
 import { useCart } from "../context/CartContext";
-import { useRef } from "react";
+// --- Import the new component ---
+import AddOnSelector from "../components/AddOnSelector"; 
 import CustomBottomSheet from "../components/UI/CustomBottomSheet";
+
+// Utility function (kept here for consistency)
+const getAddOnItemId = (bundleId, dayName) => `addon_bundle_${bundleId}_${dayName}`;
 
 export default function ItemDetail() {
   const bottomSheetRef = useRef(null);
   const router = useRouter();
   const params = useLocalSearchParams();
-  const [bottomSheetTitle, setBottomSheetTitle] = useState("");
 
-  const { bundleId } = params;
-
-  const { addToCart, cartItems } = useCart();
-
+  const [bottomSheetTitle, setBottomSheetTitle] = useState("Add-on Products");
   const [isAdding, setIsAdding] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  const { bundleId } = params;
+  const { addToCart, cartItems } = useCart();
 
   const item = useMemo(
     () => bundleData.bundles.find((b) => b.id === bundleId),
@@ -44,7 +47,6 @@ export default function ItemDetail() {
   }
 
   const placeholderImage = require("../assets/lblplaceholder.jpg");
-
   const itemInCart = cartItems.find((cartItem) => cartItem.id === item.id);
 
   const handleAddToCart = () => {
@@ -53,8 +55,11 @@ export default function ItemDetail() {
     setIsAdding(true);
 
     setTimeout(() => {
-      addToCart(item);
+      // Add the main bundle to the cart
+      addToCart(item); 
       setIsAdding(false);
+      // Open the add-on sheet automatically after adding the bundle
+      bottomSheetRef.current?.open(); 
     }, 800);
   };
 
@@ -66,12 +71,13 @@ export default function ItemDetail() {
     );
   };
 
-  const handleAddon = (day) => {
-	setBottomSheetTitle(day+" Add on");
+  const handleAddonSheetOpen = () => {
+    if (!itemInCart) {
+        alert("Please add the main bundle to the cart first.");
+        return;
+    }
     bottomSheetRef.current?.open();
-
   };
-
 
   // --- Conditional Footer Button Component ---
   const FooterButton = () => {
@@ -79,7 +85,7 @@ export default function ItemDetail() {
       // RENDER: View in Cart Button (Outline style)
       <CustomPressable
         onPress={() => router.push("/myCart")}
-        style={[styles.actionButton, styles.viewInCartBtn]} // 👈 actionButton has flex: 1
+        style={[styles.actionButton, styles.viewInCartBtn]} 
       >
         <Text style={[styles.subscribeText, styles.viewInCartText]}>
           VIEW IN CART
@@ -89,7 +95,7 @@ export default function ItemDetail() {
       // RENDER: Add to Cart Button (Solid style with spinner)
       <CustomPressable
         onPress={handleAddToCart}
-        style={[styles.actionButton, isAdding && styles.addToCardBtnDisabled]} // 👈 actionButton has flex: 1
+        style={[styles.actionButton, isAdding && styles.addToCardBtnDisabled]} 
         disabled={isAdding}
       >
         {isAdding ? (
@@ -102,7 +108,6 @@ export default function ItemDetail() {
 
     return (
       <View style={styles.footerButtonWrapper}>
-        {/* Favorite Icon Button (Fixed width) */}
         <CustomPressable
           onPress={handleFavirid}
           style={styles.favoriteFooterButton}
@@ -114,8 +119,9 @@ export default function ItemDetail() {
           />
         </CustomPressable>
 
-        {/* Main Action Button (Flex: 1 takes the rest of the space) */}
-        {button}
+        <View style={{ flex: 1 }}>
+          {button}
+        </View>
       </View>
     );
   };
@@ -134,7 +140,6 @@ export default function ItemDetail() {
         />
 
         <View style={styles.overlay}>
-          {/* Back Button */}
           <TouchableOpacity
             onPress={() => router.back()}
             style={styles.closeButton}
@@ -159,59 +164,91 @@ export default function ItemDetail() {
           <Text style={styles.menuHeaderText}>Daily Menu</Text>
         </View>
 
-        {item.days.map((day, index) => (
-          <CustomPressable
-            key={index}
-            style={styles.dayCard}
-            onPress={() =>
-              router.push({
-                pathname: "/dayMenuList",
-                params: { bundleId: item.id, day: day.day },
-              })
-            }
-          >
-            <View style={styles.dayCardLeft}>
-              <View>
-                <Text style={styles.dayCardDayText}>{day.day}</Text>
-                <Text style={styles.dayCardMenuName}>{day.menuName}</Text>
-              </View>
-            </View>
-            <View style={styles.dayCardRight}>
-              <View style={styles.dayCardChevron}>
-                <Text style={styles.dayCardNutrition}>
-                  {day.totalNutrition.calories} Cal
+        {/* --- COMMON ADD-ON BUTTON --- */}
+        {itemInCart && (
+             <View style={styles.commonAddOnWrapper}>
+                <Text style={styles.commonAddOnText}>
+                    Enhance your order:
                 </Text>
-                <CustomPressable
-                  style={styles.addButton}
-                  onPress={()=>handleAddon(day.day)} 
+                <CustomPressable 
+                    onPress={handleAddonSheetOpen} 
+                    style={styles.commonAddonButton}
                 >
-                  <Text style={styles.addButtonText}>Add on</Text>
+                    <Text style={styles.commonAddonButtonText}>
+                        + Add Extras
+                    </Text>
                 </CustomPressable>
-              </View>
-            </View>
-          </CustomPressable>
-        ))}
+             </View>
+        )}
+        {/* --------------------------- */}
+
+        {item.days.map((dayObj, index) => {
+            const addOnId = getAddOnItemId(item.id, dayObj.day);
+            const appliedAddOnBundle = cartItems.find(cartItem => cartItem.id === addOnId);
+            const totalAddOnPrice = appliedAddOnBundle?.price || 0;
+            const totalAddOnItems = appliedAddOnBundle?.products?.length || 0;
+
+            return (
+                <CustomPressable
+                  key={index}
+                  style={styles.dayCard}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/dayMenuList",
+                      params: { bundleId: item.id, day: dayObj.day },
+                    })
+                  }
+                >
+                  <View style={styles.dayCardLeft}>
+                    <View>
+                      <Text style={styles.dayCardDayText}>{dayObj.day}</Text>
+                      <Text style={styles.dayCardMenuName}>{dayObj.menuName}</Text>
+                      {totalAddOnItems > 0 && (
+                          <Text style={styles.addOnSummary}>
+                              + {totalAddOnItems} Extra Item(s) Added (₹{totalAddOnPrice})
+                          </Text>
+                      )}
+                    </View>
+                  </View>
+                  <View style={styles.dayCardRight}>
+                    <View style={styles.dayCardChevron}>
+                      <Text style={styles.dayCardNutrition}>
+                        {dayObj.totalNutrition.calories} Cal
+                      </Text>
+                    </View>
+                  </View>
+                </CustomPressable>
+            );
+        })}
       </ScrollView>
 
-      {/* Footer */}
       <View style={styles.footer}>
         <FooterButton />
       </View>
 
       <Stack.Screen options={{ headerShown: false }} />
       <CustomBottomSheet
-    ref={bottomSheetRef}
-    title={bottomSheetTitle || "Add on"}
-    buttonText="Add to Order"
-    snapPoints={["35%", "60%"]}
-    // 👈 ADD THIS PROP
-    initialIndex={-1} 
-/>
+        ref={bottomSheetRef}
+        title={bottomSheetTitle}
+        snapPoints={["35%", "60%"]}
+        initialIndex={-1} 
+      >
+        {/* --- Pass Props to the new component --- */}
+        <AddOnSelector 
+            itemDays={item.days}
+            bundleId={item.id}
+            cartItems={cartItems}
+            addToCart={addToCart}
+            onClose={() => bottomSheetRef.current?.close()} // Pass close function
+        />
+        {/* -------------------------------------- */}
+      </CustomBottomSheet>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // --- Main Styles ---
   container: {
     flex: 1,
     backgroundColor: "#ffffffff",
@@ -263,11 +300,17 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 5,
   },
+  categoryIcon: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    backgroundColor: "#fff",
+  },
   scrollArea: {
     flex: 1,
     paddingHorizontal: 15,
     paddingTop: 10,
-    marginBottom: 100,
+    marginBottom: 100, 
   },
   menuHeader: {
     marginBottom: 15,
@@ -321,21 +364,13 @@ const styles = StyleSheet.create({
     color: "#374151",
     marginRight: 8,
   },
-  addButton: {
-    backgroundColor: "#000",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    alignSelf: "flex-start",
+  addOnSummary: {
+    fontSize: 14,
+    color: '#004346',
+    fontWeight: 'bold',
     marginTop: 5,
   },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-
-  // --- 3. Fixed Footer Button Styles ---
+  // --- Main Footer Button Styles ---
   footer: {
     position: "absolute",
     bottom: 0,
@@ -348,12 +383,11 @@ const styles = StyleSheet.create({
     borderColor: "#e5e7eb",
     width: "100%",
   },
-  // Wrapper for both buttons
   footerButtonWrapper: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
-  // Favorite Icon Button Style (Fixed width)
   favoriteFooterButton: {
     height: 50,
     width: 50,
@@ -364,7 +398,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginRight: 10,
   },
-  // Action button style: takes up all available space
   actionButton: {
     flex: 1,
     borderRadius: 30,
@@ -373,10 +406,9 @@ const styles = StyleSheet.create({
     minHeight: 50,
     backgroundColor: "#1E1E1E",
     justifyContent: "center",
-    width: 250,
+    minWidth:"90%",
     minHeight: 60,
   },
-  // Existing styles applied to actionButton
   addToCardBtnDisabled: {
     opacity: 0.7,
   },
@@ -393,10 +425,31 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  categoryIcon: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    backgroundColor: "#fff",
+  // --- COMMON ADD-ONS BUTTON STYLES (Kept here as it's part of ItemDetail UI) ---
+  commonAddOnWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    paddingHorizontal: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    marginBottom: 10,
+  },
+  commonAddOnText: {
+    fontSize: 16,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  commonAddonButton: {
+    backgroundColor: '#004346',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+  },
+  commonAddonButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
