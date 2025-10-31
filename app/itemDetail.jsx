@@ -14,8 +14,12 @@ import CustomPressable from "../components/UI/CustomPressable";
 import { bundleData } from "../services/data";
 import CategoryIcon from "../components/CategoryIcon";
 import { useCart } from "../context/CartContext";
+import { useRef } from "react";
+import CustomBottomSheet from "../components/UI/CustomBottomSheet";
 
 export default function ItemDetail() {
+	const bottomSheetRef = useRef(null);
+
 	const router = useRouter();
 	const params = useLocalSearchParams();
 	const { bundleId } = params;
@@ -172,12 +176,15 @@ export default function ItemDetail() {
 								</Text>
 								<CustomPressable
 									style={styles.addButton}
-									onPress={() => console.log("Add on for", day.day)}
+									onPress={() => bottomSheetRef.current?.open()}
+
 								>
 									<Text style={styles.addButtonText}>Add on</Text>
 								</CustomPressable>
 							</View>
 						</View>
+						
+
 					</CustomPressable>
 				))}
 			</ScrollView>
@@ -188,6 +195,7 @@ export default function ItemDetail() {
 			</View>
 
 			<Stack.Screen options={{ headerShown: false }} />
+			<CustomBottomSheet ref={bottomSheetRef} />
 		</View>
 	);
 }
@@ -349,14 +357,14 @@ const styles = StyleSheet.create({
     // Action button style: takes up all available space
     actionButton: {
         flex: 1, 
-       
         borderRadius: 30,
         paddingVertical: 15,
         alignItems: "center",
         minHeight: 50,
         backgroundColor: "#1E1E1E",
-        // justifyContent: 'center',
+        justifyContent: 'center',
         width: 250,
+		minHeight:60
 	},
     // Existing styles applied to actionButton
 	addToCardBtnDisabled: {
