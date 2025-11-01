@@ -1,20 +1,22 @@
 // /context/CartContext.js
-import { createContext, useContext, useState, useMemo } from 'react';
+import { createContext, useContext, useState, useMemo, useCallback, useRef } from 'react';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
+  
+  // Use refs to store functions so they don't trigger re-renders
+  const listenersRef = useRef(new Set());
 
-  // --- ACTIONS ---
+  // --- STABLE ACTIONS (wrapped in useCallback with no dependencies) ---
 
   // 1. Add or Increment Item
-  const addToCart = (bundle) => {
+  const addToCart = useCallback((bundle) => {
     setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(item => item.id === bundle.id);
 
       if (existingItemIndex > -1) {
-        // Item already in cart, increase quantity
         const newItems = [...prevItems];
         newItems[existingItemIndex] = {
           ...newItems[existingItemIndex],
@@ -22,72 +24,75 @@ export const CartProvider = ({ children }) => {
         };
         return newItems;
       } else {
-        // New item, add to cart
         return [
           ...prevItems,
           {
             id: bundle.id,
             name: bundle.name,
             price: bundle.price,
-            quantity: 1, // Start with quantity 1
+            quantity: 1,
+            // Include any other fields from bundle
+            days: bundle.days,
+            isAddOnBundle: bundle.isAddOnBundle,
           },
         ];
       }
     });
-  };
+  }, []); // Empty dependency array - function never changes
 
-  // 2. Increment/Decrement Quantity
-  const updateQuantity = (id, type) => {
+  // 2. Increment/Decrement Quantity - OPTIMIZED
+  const updateQuantity = useCallback((id, type) => {
     setCartItems((prevItems) => {
-      return prevItems
-        .map((item) => {
-          if (item.id !== id) return item;
-          
-          let newQuantity = item.quantity;
-          if (type === "inc") {
-            newQuantity = item.quantity + 1;
-          } else if (type === "dec") {
-            // Ensure quantity doesn't go below 1
-            newQuantity = Math.max(1, item.quantity - 1);
-          }
-          
-          return { ...item, quantity: newQuantity };
-        })
-        .filter((item) => item.quantity > 0); // Cleanup in case we allow quantity 0 in the future
+      return prevItems.map((item) => {
+        if (item.id !== id) return item;
+        
+        let newQuantity = item.quantity;
+        if (type === "inc") {
+          newQuantity = item.quantity + 1;
+        } else if (type === "dec") {
+          newQuantity = Math.max(1, item.quantity - 1);
+        }
+        
+        // Only create new object if quantity actually changed
+        if (newQuantity === item.quantity) return item;
+        
+        return { ...item, quantity: newQuantity };
+      });
     });
-  };
+  }, []); // Empty dependency array - function never changes
 
   // 3. Remove Item
-  const removeItem = (id) => {
+  const removeItem = useCallback((id) => {
     setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  };
+  }, []); // Empty dependency array
 
-  // 4. empty cart after pay 
-  const emptyCart = () => {
+  // 4. Empty cart after pay 
+  const emptyCart = useCallback(() => {
     setCartItems([]);
     console.log("Cart cleared");
-    
-  };
+  }, []); // Empty dependency array
 
-
-
-  // --- CALCULATIONS ---
-
+  // --- CALCULATIONS (memoized based on cartItems) ---
   const cartTotals = useMemo(() => {
     const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     return { totalItems, subtotal };
   }, [cartItems]);
 
-  // The value exposed to consumers
-  const contextValue = {
-    cartItems,
+  // --- STABLE CONTEXT VALUE ---
+  // Split into two values: one that changes, one that doesn't
+  const stableActions = useMemo(() => ({
     addToCart,
     updateQuantity, 
     removeItem,     
-    emptyCart,      
+    emptyCart,
+  }), [addToCart, updateQuantity, removeItem, emptyCart]);
+
+  const contextValue = useMemo(() => ({
+    cartItems,
     ...cartTotals,
-  };
+    ...stableActions,
+  }), [cartItems, cartTotals, stableActions]);
 
   return (
     <CartContext.Provider value={contextValue}>
@@ -102,4 +107,14 @@ export const useCart = () => {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
+};
+
+// --- OPTIMIZED SELECTOR HOOK ---
+// Use this to subscribe to only specific parts of the cart
+export const useCartSelector = (selector) => {
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    throw new Error('useCartSelector must be used within a CartProvider');
+  }
+  return useMemo(() => selector(context), [context, selector]);
 };

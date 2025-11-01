@@ -1,9 +1,11 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import React from "react";
+import { useRouter } from "expo-router";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { ImageBackground } from "expo-image";
 
 export default function Profile() {
+  const router = useRouter();
+
   return (
     <View style={styles.container}>
       {/* Header Section */}
@@ -21,7 +23,7 @@ export default function Profile() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
 
-        <Pressable style={styles.row}>
+        <Pressable style={styles.row} onPress={()=>router.navigate("profileDetails")}>
           <Ionicons name="person-outline" size={20} color="#000" />
           <Text style={styles.rowText}>Profile</Text>
           <Ionicons

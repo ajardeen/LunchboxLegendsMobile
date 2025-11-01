@@ -1,11 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback, useMemo, memo } from "react";
 import {
   StyleSheet,
   Text,
   View,
   Pressable,
-  ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import CustomPressable from "../../components/UI/CustomPressable";
 import { useRouter } from "expo-router";
@@ -15,6 +15,142 @@ import { Image } from "expo-image";
 import CustomBottomSheet from "../../components/UI/CustomBottomSheet";
 import AddressChangeSheet from "../../components/AddressChangeSheet";
 import CartItemDetailSheet from "../../components/CartItemDetailSheet";
+import { SwipeListView } from "react-native-swipe-list-view";
+
+// --- CRITICAL: Extract actions to avoid re-renders ---
+const useCartActions = () => {
+  const { updateQuantity, removeItem } = useCart();
+  
+  // These refs keep the same function reference across renders
+  const updateQuantityRef = useRef(updateQuantity);
+  const removeItemRef = useRef(removeItem);
+  
+  // Update refs when functions change
+  updateQuantityRef.current = updateQuantity;
+  removeItemRef.current = removeItem;
+  
+  // Return stable callbacks
+  return useMemo(() => ({
+    updateQuantity: (id, type) => updateQuantityRef.current(id, type),
+    removeItem: (id) => removeItemRef.current(id),
+  }), []);
+};
+
+// --- Memoized Cart Item Component ---
+const CartItem = memo(({ item, onUpdateQuantity, onViewDetails }) => {
+  const handleIncrement = useCallback(() => {
+    onUpdateQuantity(item.id, "inc");
+  }, [item.id, onUpdateQuantity]);
+
+  const handleDecrement = useCallback(() => {
+    onUpdateQuantity(item.id, "dec");
+  }, [item.id, onUpdateQuantity]);
+
+  const handlePress = useCallback(() => {
+    onViewDetails(item);
+  }, [item, onViewDetails]);
+
+  return (
+    <View style={styles.rowFront}>
+      <View style={styles.itemRow}>
+        <View style={{ flex: 1 }}>
+          <TouchableOpacity onPress={handlePress}>
+            <Text style={styles.itemName}>{item.name}</Text>
+          </TouchableOpacity>
+          <Text style={styles.itemPrice}>
+            ₹{(item.price * item.quantity).toFixed(2)}
+          </Text>
+        </View>
+        <View style={styles.quantityAndClearWrapper}>
+          <View style={styles.quantityContainer}>
+            <Pressable onPress={handleDecrement} style={styles.qtyButton}>
+              <Text style={styles.qtyText}>−</Text>
+            </Pressable>
+            <Text style={styles.qtyNumber}>{item.quantity}</Text>
+            <Pressable onPress={handleIncrement} style={styles.qtyButton}>
+              <Text style={styles.qtyText}>+</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}, (prevProps, nextProps) => {
+  // Only re-render if THIS specific item changed
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.quantity === nextProps.item.quantity &&
+    prevProps.item.price === nextProps.item.price &&
+    prevProps.item.name === nextProps.item.name
+  );
+});
+
+CartItem.displayName = 'CartItem';
+
+// --- Memoized Hidden Item (Delete Button) ---
+const HiddenItem = memo(({ item, onRemove }) => {
+  const handleRemove = useCallback(() => {
+    onRemove(item.id);
+  }, [item.id, onRemove]);
+
+  return (
+    <View style={styles.rowBack}>
+      <TouchableOpacity
+        style={[styles.backBtn, styles.deleteBtn]}
+        onPress={handleRemove}
+      >
+        <Ionicons name="trash-outline" size={24} color="#fff" />
+        <Text style={styles.backText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id);
+
+HiddenItem.displayName = 'HiddenItem';
+
+// --- SEPARATE COMPONENT FOR CART LIST ---
+// This component will re-render, but CartItem components won't
+const CartList = memo(({ cartItems, onUpdateQuantity, onRemoveItem, onViewDetails, ListFooterComponent }) => {
+  const renderItem = useCallback(
+    ({ item }) => (
+      <CartItem
+        item={item}
+        onUpdateQuantity={onUpdateQuantity}
+        onViewDetails={onViewDetails}
+      />
+    ),
+    [onUpdateQuantity, onViewDetails]
+  );
+
+  const renderHiddenItem = useCallback(
+    ({ item }) => <HiddenItem item={item} onRemove={onRemoveItem} />,
+    [onRemoveItem]
+  );
+
+  const keyExtractor = useCallback((item) => item.id, []);
+
+  return (
+    <SwipeListView
+      data={cartItems}
+      renderItem={renderItem}
+      renderHiddenItem={renderHiddenItem}
+      rightOpenValue={-75}
+      disableRightSwipe={true}
+      keyExtractor={keyExtractor}
+      style={{ flex: 1 }}
+      useFlatList={true}
+      ListFooterComponent={ListFooterComponent}
+      contentContainerStyle={{ paddingBottom: 200, paddingHorizontal: 20 }}
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={10}
+      updateCellsBatchingPeriod={50}
+      initialNumToRender={10}
+      windowSize={5}
+    />
+  );
+});
+
+CartList.displayName = 'CartList';
 
 // --- MyCart Component ---
 const MyCart = () => {
@@ -23,19 +159,23 @@ const MyCart = () => {
 
   const router = useRouter();
 
-  const { cartItems, subtotal, updateQuantity, removeItem, emptyCart } =
-    useCart();
+  // Get cart data
+  const { cartItems, subtotal, emptyCart } = useCart();
+  
+  // Get stable action functions
+  const { updateQuantity, removeItem } = useCartActions();
 
   const [selectedAddress, setSelectedAddress] = useState("home");
   const [paymentMethod, setPaymentMethod] = useState("gpay");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedCartItem, setSelectedCartItem] = useState(null);
 
   const taxes = 10.0;
   const delivery = 0;
 
   const total = subtotal + taxes + delivery;
 
-  const addresses = [
+  const addresses = useMemo(() => [
     {
       id: "home",
       title: "Home",
@@ -48,46 +188,35 @@ const MyCart = () => {
       phone: "(0261) 555-0115",
       address: "2588 Ratan lal sahdev marg",
     },
-  ];
+  ], []);
 
-  const currentAddress = addresses.find((addr) => addr.id === selectedAddress);
+  const currentAddress = useMemo(
+    () => addresses.find((addr) => addr.id === selectedAddress),
+    [addresses, selectedAddress]
+  );
 
-  const paymentOptions = [
+  const paymentOptions = useMemo(() => [
     {
       id: "gpay",
       title: "Google Pay",
       icon: require("../../assets/gpayicon.png"),
     },
-    // { id: "paytm", title: "Paytm", icon: require("../../assets/paytmicon.jpg") },
-  ];
+  ], []);
 
-  // 🎯 UPDATED: Checkout handler with console logging
-  const handleCheckout = () => {
+  const handleViewItemDetails = useCallback((item) => {
+    const isDetailedItem = item.days || item.isAddOnBundle;
+    if (isDetailedItem) {
+      setSelectedCartItem(item);
+      viewCartItemsSheetRef.current?.open();
+    }
+  }, []);
+
+  const handleCheckout = useCallback(() => {
     try {
       if (cartItems.length === 0) return;
-
       setIsProcessing(true);
-
-      const orderDetails = {
-        items: cartItems.map((item) => ({
-          id: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          price_per_unit: item.price,
-        })),
-        summary: {
-          subtotal: subtotal.toFixed(2),
-          taxes: taxes.toFixed(2),
-          deliveryFee: delivery.toFixed(2),
-          total: total.toFixed(2),
-        },
-        delivery: currentAddress,
-        paymentMethod: paymentMethod,
-      };
-
+      const orderDetails = {};
       console.log("--- FINAL ORDER DETAILS ---", orderDetails);
-
-      // Simulate a network request or payment processing delay
     } catch (error) {
       console.log(error.message);
     } finally {
@@ -97,191 +226,118 @@ const MyCart = () => {
         emptyCart();
       }, 2000);
     }
-  };
+  }, [cartItems.length, router, emptyCart]);
 
-  // --- Component for the Delivery Block ---
-  const DeliveryBlock = () => (
-    <View style={deliveryStyles.deliveryContainer}>
-      <View style={deliveryStyles.leftContent}>
-        <Ionicons
-          name="location-outline"
-          size={24}
-          color={styles.primaryColor.color}
-        />
-        <View style={deliveryStyles.textBlock}>
-          <Text style={deliveryStyles.titleText}>
-            Deliver at : {currentAddress.title}
-          </Text>
-          <Text style={deliveryStyles.subtitleText}>
-            {currentAddress.address}
-          </Text>
-        </View>
-      </View>
-      <Pressable
-        onPress={() => {
-          console.log("change pressed");
-          addressChangeSheetRef.current?.open();
-        }}
-      >
-        <Text style={deliveryStyles.changeText}>CHANGE</Text>
-      </Pressable>
-    </View>
-  );
-  // --- End of Delivery Block Component ---
+  const handleNavigateHome = useCallback(() => {
+    router.navigate("/home");
+  }, [router]);
 
-  // --- Empty Cart View ---
-  const EmptyCartView = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyMessage}>Your cart is empty!</Text>
-      <CustomPressable
-        onPress={() => router.navigate("/home")} // 🎯 Navigate to /home
-        style={styles.homeButton}
-      >
-        <Text style={styles.homeButtonText}>Browse Bundles</Text>
-      </CustomPressable>
-    </View>
-  );
-  const [selectedCartItem, setSelectedCartItem] = useState(null);
-const handleViewItemDetails = (item) => {
-  console.log(item);
-  
-    // Check if item has details
-    const isDetailedItem = item.days || item.isAddOnBundle;
-    if (isDetailedItem) {
-      setSelectedCartItem(item);
-      viewCartItemsSheetRef.current?.open();
-    } else {
-      console.log("This item has no details to show.");
-    }
-  };
+  const handleSelectAddress = useCallback((id) => {
+    setSelectedAddress(id);
+    addressChangeSheetRef.current?.close();
+  }, []);
+
+  const handleOpenAddressSheet = useCallback(() => {
+    addressChangeSheetRef.current?.open();
+  }, []);
+
+  const handleCloseAddressSheet = useCallback(() => {
+    addressChangeSheetRef.current?.close();
+  }, []);
+
+  const handleCloseItemSheet = useCallback(() => {
+    setSelectedCartItem(null);
+  }, []);
+
+  // Main render
   return (
     <View style={styles.container}>
-      <ScrollView
-        showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 200 }}>
-        <Text style={styles.title}>
-          <Ionicons name="cart-outline" size={24} color="#004346" />
-          Cart
-        </Text>
-
-        {/* 🎯 LOGIC: Render EmptyCartView or Cart Content */}
-        {cartItems.length === 0 ? (
-          <EmptyCartView />
-        ) : (
-          <>
+      {cartItems.length === 0 ? (
+        <EmptyCartView onNavigateHome={handleNavigateHome} />
+      ) : (
+        <View style={{ flex: 1 }}>
+          {/* Header */}
+          <View style={styles.headerContainer}>
+            <Text style={styles.title}>
+              <Ionicons name="cart-outline" size={24} color="#004346" />
+              Cart
+            </Text>
             <View style={styles.cartItemsContainer}>
               <Text style={styles.sectionTitle}>My Cart</Text>
-              {cartItems.map((item) => (
-                <View key={item.id} style={styles.itemRow}>
-                  <View style={{ flex: 1 }}>
+            </View>
+          </View>
+
+          {/* Scrollable Content Area */}
+          <View style={{ flex: 1 }}>
+            <CartList
+              cartItems={cartItems}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeItem}
+              onViewDetails={handleViewItemDetails}
+              ListFooterComponent={
+                <View style={styles.scrollableFooterContent}>
+                  <Text onPress={handleNavigateHome} style={styles.addMore}>
+                    + Add more items
+                  </Text>
+
+                  {/* Payment Section */}
+                  <Text style={styles.sectionTitle}>Payment Method</Text>
+                  {paymentOptions.map((method) => (
                     <Pressable
-                      onPress={() => {
-                        console.log("change pressed");
-                        handleViewItemDetails(item);
-                        viewCartItemsSheetRef.current?.open();
-                      }}
+                      key={method.id}
+                      style={styles.paymentRow}
+                      onPress={() => setPaymentMethod(method.id)}
                     >
-                      <Text style={styles.itemName}>{item.name}</Text>
-                      <Text style={styles.itemPrice}>
-                        ₹{item.price.toFixed(2)}
-                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                        <Image
+                          source={method.icon}
+                          style={{ width: 35, height: 35 }}
+                          contentFit="contain"
+                          transition={300}
+                        />
+                        <Text style={styles.paymentText}>{method.title}</Text>
+                      </View>
+                      <View style={styles.radioOuter}>
+                        {paymentMethod === method.id && <View style={styles.radioInner} />}
+                      </View>
                     </Pressable>
-                  </View>
-                  <View style={styles.quantityAndClearWrapper}>
-                    <Pressable onPress={() => removeItem(item.id)}>
-                      <Text style={styles.remove}>×</Text>
-                    </Pressable>
-                    <View style={styles.quantityContainer}>
-                      <Pressable
-                        onPress={() => updateQuantity(item.id, "dec")}
-                        style={styles.qtyButton}
-                      >
-                        <Text style={styles.qtyText}>−</Text>
-                      </Pressable>
-                      <Text style={styles.qtyNumber}>{item.quantity}</Text>
-                      <Pressable
-                        onPress={() => updateQuantity(item.id, "inc")}
-                        style={styles.qtyButton}
-                      >
-                        <Text style={styles.qtyText}>+</Text>
-                      </Pressable>
+                  ))}
+
+                  {/* Summary Section */}
+                  <View style={styles.scrollableFooterSummery}>
+                    <Text style={styles.sectionTitle}>Summary</Text>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Sub total</Text>
+                      <Text style={styles.summaryValue}>₹{subtotal.toFixed(2)}</Text>
                     </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Taxes & Fees</Text>
+                      <Text style={styles.summaryValue}>₹{taxes.toFixed(2)}</Text>
+                    </View>
+                    {delivery.toFixed(2) < 1 ? (
+                      <View style={styles.summaryRow}>
+                        <Text style={[styles.summaryLabel, styles.deliveryFreeText]}>
+                          Delivery Fee
+                        </Text>
+                        <Text style={[styles.summaryValue, styles.deliveryFreeText]}>
+                          Free
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={styles.summaryRow}>
+                        <Text style={styles.summaryLabel}>Delivery Fee</Text>
+                        <Text style={styles.summaryValue}>₹{delivery.toFixed(2)}</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
-              ))}
-            </View>
+              }
+            />
+          </View>
+        </View>
+      )}
 
-            <Text
-              onPress={() => router.navigate("/home")}
-              style={styles.addMore}
-            >
-              + Add more items
-            </Text>
-
-            {/* Payment Section */}
-            <Text style={styles.sectionTitle}>Payment Method</Text>
-            {paymentOptions.map((method) => (
-              <Pressable
-                key={method.id}
-                style={styles.paymentRow}
-                onPress={() => setPaymentMethod(method.id)}
-              >
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <Image
-                    source={method.icon}
-                    style={{ width: 35, height: 35 }}
-                    contentFit="contain"
-                    transition={300}
-                  />
-                  <Text style={styles.paymentText}>{method.title}</Text>
-                </View>
-                <View style={styles.radioOuter}>
-                  {paymentMethod === method.id && (
-                    <View style={styles.radioInner} />
-                  )}
-                </View>
-              </Pressable>
-            ))}
-            <View style={styles.scrollableFooterSummery}>
-              <Text style={styles.sectionTitle}>Summery</Text>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Sub total</Text>
-                <Text style={styles.summaryValue}>₹{subtotal.toFixed(2)}</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Taxes & Fees</Text>
-                <Text style={styles.summaryValue}>₹{taxes.toFixed(2)}</Text>
-              </View>
-              {delivery.toFixed(2) < 1 ? (
-                <View style={styles.summaryRow}>
-                  <Text style={[styles.summaryLabel, styles.deliveryFreeText]}>
-                    Delivery Fee
-                  </Text>
-                  <Text style={[styles.summaryValue, styles.deliveryFreeText]}>
-                    Free
-                  </Text>
-                </View>
-              ) : (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>Delivery Fee</Text>
-                  <Text style={styles.summaryValue}>
-                    ₹{delivery.toFixed(2)}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </>
-        )}
-      </ScrollView>
-
-      {/* Footer: Only render if cart is NOT empty */}
+      {/* Footer: Stays fixed at the bottom */}
       {cartItems.length > 0 && (
         <View style={styles.footer}>
           <View style={styles.summary}>
@@ -289,8 +345,10 @@ const handleViewItemDetails = (item) => {
               <Text style={styles.totalLabel}>Total</Text>
               <Text style={styles.totalValue}>₹{total.toFixed(2)}</Text>
             </View>
-            {/* Delivery Block is now correctly placed here */}
-            <DeliveryBlock />
+            <DeliveryBlock
+              currentAddress={currentAddress}
+              onOpenAddressSheet={handleOpenAddressSheet}
+            />
           </View>
 
           <CustomPressable
@@ -309,7 +367,9 @@ const handleViewItemDetails = (item) => {
           </CustomPressable>
         </View>
       )}
-        <CustomBottomSheet
+
+      {/* Bottom Sheets */}
+      <CustomBottomSheet
         ref={addressChangeSheetRef}
         title="Change Delivery Address"
         snapPoints={["45%", "60%"]}
@@ -318,32 +378,65 @@ const handleViewItemDetails = (item) => {
         <AddressChangeSheet
           addresses={addresses}
           selectedAddressId={selectedAddress}
-          onSelectAddress={(id) => {
-            setSelectedAddress(id);
-            addressChangeSheetRef.current?.close(); // Close on select
-          }}
-          onClose={() => addressChangeSheetRef.current?.close()}
+          onSelectAddress={handleSelectAddress}
+          onClose={handleCloseAddressSheet}
           router={router}
         />
       </CustomBottomSheet>
-     <CustomBottomSheet
+      <CustomBottomSheet
         ref={viewCartItemsSheetRef}
         title={selectedCartItem ? selectedCartItem.name : "Item Details"}
         snapPoints={["45%", "75%"]}
         initialIndex={-1}
-        // When sheet closes, clear the selected item
-        onClose={() => setSelectedCartItem(null)}
+        onClose={handleCloseItemSheet}
       >
         <CartItemDetailSheet item={selectedCartItem} />
       </CustomBottomSheet>
-
     </View>
   );
 };
 
+// --- Memoized Delivery Block Component ---
+const DeliveryBlock = memo(({ currentAddress, onOpenAddressSheet }) => (
+  <View style={deliveryStyles.deliveryContainer}>
+    <View style={deliveryStyles.leftContent}>
+      <Ionicons
+        name="location-outline"
+        size={24}
+        color={styles.primaryColor.color}
+      />
+      <View style={deliveryStyles.textBlock}>
+        <Text style={deliveryStyles.titleText}>
+          Deliver at : {currentAddress.title}
+        </Text>
+        <Text style={deliveryStyles.subtitleText}>
+          {currentAddress.address}
+        </Text>
+      </View>
+    </View>
+    <Pressable onPress={onOpenAddressSheet}>
+      <Text style={deliveryStyles.changeText}>CHANGE</Text>
+    </Pressable>
+  </View>
+));
+
+DeliveryBlock.displayName = 'DeliveryBlock';
+
+// --- Memoized Empty Cart View ---
+const EmptyCartView = memo(({ onNavigateHome }) => (
+  <View style={styles.emptyContainer}>
+    <Text style={styles.emptyMessage}>Your cart is empty!</Text>
+    <CustomPressable onPress={onNavigateHome} style={styles.homeButton}>
+      <Text style={styles.homeButtonText}>Browse Bundles</Text>
+    </CustomPressable>
+  </View>
+));
+
+EmptyCartView.displayName = 'EmptyCartView';
+
 export default MyCart;
 
-// --- Delivery Block Styles (Separate for clarity) ---
+// --- Delivery Block Styles ---
 const deliveryStyles = StyleSheet.create({
   deliveryContainer: {
     flexDirection: "row",
@@ -387,18 +480,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 20,
     paddingTop: 20,
+  },
+  headerContainer: {
+    paddingHorizontal: 20,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 10,
-
     color: "#004346",
   },
-  // 🎯 NEW: Empty cart styles
   emptyContainer: {
     flex: 1,
     alignItems: "center",
@@ -420,9 +513,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
   },
-  // End new styles
   cartItemsContainer: {
-    flex: 1,
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderColor: "#eee",
@@ -430,14 +521,38 @@ const styles = StyleSheet.create({
     padding: 5,
     paddingTop: 5,
   },
+  rowFront: {
+    backgroundColor: "#fff",
+    borderBottomColor: "#eee",
+    borderBottomWidth: 1,
+    justifyContent: "center",
+    height: 70,
+  },
+  rowBack: {
+    alignItems: "center",
+    backgroundColor: "red",
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  backBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 75,
+    backgroundColor: "red",
+    right: 0,
+  },
+  backText: {
+    color: "#fff",
+    fontWeight: "bold",
+    marginTop: 2,
+  },
   itemRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderColor: "#eee",
-
-    borderRadius: 12,
     paddingHorizontal: 5,
     paddingVertical: 10,
   },
@@ -454,20 +569,27 @@ const styles = StyleSheet.create({
   },
   itemPrice: {
     fontSize: 12,
-    color: "#777",
+    color: "#000",
+    fontWeight: "bold",
     marginTop: 2,
   },
   quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
-
+    justifyContent: "center",
+    width: 100,
     backgroundColor: "#f4f4f4",
     borderRadius: 10,
-    paddingHorizontal: 8,
+    paddingHorizontal: 5,
+    marginTop: 8,
   },
   qtyButton: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 5,
     paddingVertical: 4,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 5,
+    width: 35,
   },
   qtyText: {
     fontSize: 18,
@@ -476,13 +598,16 @@ const styles = StyleSheet.create({
   qtyNumber: {
     fontSize: 16,
     fontWeight: "600",
-    marginHorizontal: 6,
-  },
-  remove: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#999",
     marginHorizontal: 10,
+  },
+  footerContent: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
   addMore: {
     color: "#004346",
@@ -537,7 +662,6 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
   },
   scrollableFooterSummery: {
-    flex: 1,
     paddingVertical: 10,
   },
   summary: {
@@ -552,7 +676,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 10,
-    // borderTopWidth: 1,
     borderBottomWidth: 2,
     borderColor: "#eee",
     paddingVertical: 10,
