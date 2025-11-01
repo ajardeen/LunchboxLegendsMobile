@@ -65,10 +65,8 @@ const AddOnSelector = ({
   // State to track the currently selected day for add-ons (default to the first day)
   const [selectedAddOnDay, setSelectedAddOnDay] = useState(
     itemDays[0]?.day || null
-
   );
 
-  
   // State to track the quantity of each add-on being selected
   const [selectedAddOns, setSelectedAddOns] = useState({});
   const [isApplyingAddons, setIsApplyingAddons] = useState(false);
@@ -263,8 +261,7 @@ const AddOnSelector = ({
             <ActivityIndicator color="#fff" size="small" />
           ) : (
             <Text style={styles.addOnApplyButtonText}>
-              Add {addOnsTotal.count} Item(s) to {selectedAddOnDay} - ₹
-              {addOnsTotal.total}
+              Add {selectedAddOnDay} - ₹{addOnsTotal.total}
             </Text>
           )}
         </CustomPressable>

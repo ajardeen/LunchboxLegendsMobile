@@ -20,137 +20,154 @@ import { SwipeListView } from "react-native-swipe-list-view";
 // --- CRITICAL: Extract actions to avoid re-renders ---
 const useCartActions = () => {
   const { updateQuantity, removeItem } = useCart();
-  
+
   // These refs keep the same function reference across renders
   const updateQuantityRef = useRef(updateQuantity);
   const removeItemRef = useRef(removeItem);
-  
+
   // Update refs when functions change
   updateQuantityRef.current = updateQuantity;
   removeItemRef.current = removeItem;
-  
+
   // Return stable callbacks
-  return useMemo(() => ({
-    updateQuantity: (id, type) => updateQuantityRef.current(id, type),
-    removeItem: (id) => removeItemRef.current(id),
-  }), []);
+  return useMemo(
+    () => ({
+      updateQuantity: (id, type) => updateQuantityRef.current(id, type),
+      removeItem: (id) => removeItemRef.current(id),
+    }),
+    []
+  );
 };
 
 // --- Memoized Cart Item Component ---
-const CartItem = memo(({ item, onUpdateQuantity, onViewDetails }) => {
-  const handleIncrement = useCallback(() => {
-    onUpdateQuantity(item.id, "inc");
-  }, [item.id, onUpdateQuantity]);
+const CartItem = memo(
+  ({ item, onUpdateQuantity, onViewDetails }) => {
+    const handleIncrement = useCallback(() => {
+      onUpdateQuantity(item.id, "inc");
+    }, [item.id, onUpdateQuantity]);
 
-  const handleDecrement = useCallback(() => {
-    onUpdateQuantity(item.id, "dec");
-  }, [item.id, onUpdateQuantity]);
+    const handleDecrement = useCallback(() => {
+      onUpdateQuantity(item.id, "dec");
+    }, [item.id, onUpdateQuantity]);
 
-  const handlePress = useCallback(() => {
-    onViewDetails(item);
-  }, [item, onViewDetails]);
+    const handlePress = useCallback(() => {
+      onViewDetails(item);
+    }, [item, onViewDetails]);
 
-  return (
-    <View style={styles.rowFront}>
-      <View style={styles.itemRow}>
-        <View style={{ flex: 1 }}>
-          <TouchableOpacity onPress={handlePress}>
-            <Text style={styles.itemName}>{item.name}</Text>
-          </TouchableOpacity>
-          <Text style={styles.itemPrice}>
-            ₹{(item.price * item.quantity).toFixed(2)}
-          </Text>
-        </View>
-        <View style={styles.quantityAndClearWrapper}>
-          <View style={styles.quantityContainer}>
-            <Pressable onPress={handleDecrement} style={styles.qtyButton}>
-              <Text style={styles.qtyText}>−</Text>
-            </Pressable>
-            <Text style={styles.qtyNumber}>{item.quantity}</Text>
-            <Pressable onPress={handleIncrement} style={styles.qtyButton}>
-              <Text style={styles.qtyText}>+</Text>
-            </Pressable>
+    return (
+      <View style={styles.rowFront}>
+        <View style={styles.itemRow}>
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity onPress={handlePress}>
+              <Text style={styles.itemName}>{item.name}</Text>
+            </TouchableOpacity>
+            <Text style={styles.itemPrice}>
+              ₹{(item.price * item.quantity).toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.quantityAndClearWrapper}>
+            <View style={styles.quantityContainer}>
+              <Pressable onPress={handleDecrement} style={styles.qtyButton}>
+                <Text style={styles.qtyText}>−</Text>
+              </Pressable>
+              <Text style={styles.qtyNumber}>{item.quantity}</Text>
+              <Pressable onPress={handleIncrement} style={styles.qtyButton}>
+                <Text style={styles.qtyText}>+</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
-    </View>
-  );
-}, (prevProps, nextProps) => {
-  // Only re-render if THIS specific item changed
-  return (
-    prevProps.item.id === nextProps.item.id &&
-    prevProps.item.quantity === nextProps.item.quantity &&
-    prevProps.item.price === nextProps.item.price &&
-    prevProps.item.name === nextProps.item.name
-  );
-});
+    );
+  },
+  (prevProps, nextProps) => {
+    // Only re-render if THIS specific item changed
+    return (
+      prevProps.item.id === nextProps.item.id &&
+      prevProps.item.quantity === nextProps.item.quantity &&
+      prevProps.item.price === nextProps.item.price &&
+      prevProps.item.name === nextProps.item.name
+    );
+  }
+);
 
-CartItem.displayName = 'CartItem';
+CartItem.displayName = "CartItem";
 
 // --- Memoized Hidden Item (Delete Button) ---
-const HiddenItem = memo(({ item, onRemove }) => {
-  const handleRemove = useCallback(() => {
-    onRemove(item.id);
-  }, [item.id, onRemove]);
+const HiddenItem = memo(
+  ({ item, onRemove }) => {
+    const handleRemove = useCallback(() => {
+      onRemove(item.id);
+    }, [item.id, onRemove]);
 
-  return (
-    <View style={styles.rowBack}>
-      <TouchableOpacity
-        style={[styles.backBtn, styles.deleteBtn]}
-        onPress={handleRemove}
-      >
-        <Ionicons name="trash-outline" size={24} color="#fff" />
-        <Text style={styles.backText}>Delete</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}, (prevProps, nextProps) => prevProps.item.id === nextProps.item.id);
+    return (
+      <View style={styles.rowBack}>
+        <TouchableOpacity
+          style={[styles.backBtn, styles.deleteBtn]}
+          onPress={handleRemove}
+        >
+          <Ionicons name="trash-outline" size={24} color="#fff" />
+          <Text style={styles.backText}>Delete</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  },
+  (prevProps, nextProps) => prevProps.item.id === nextProps.item.id
+);
 
-HiddenItem.displayName = 'HiddenItem';
+HiddenItem.displayName = "HiddenItem";
 
 // --- SEPARATE COMPONENT FOR CART LIST ---
 // This component will re-render, but CartItem components won't
-const CartList = memo(({ cartItems, onUpdateQuantity, onRemoveItem, onViewDetails, ListFooterComponent }) => {
-  const renderItem = useCallback(
-    ({ item }) => (
-      <CartItem
-        item={item}
-        onUpdateQuantity={onUpdateQuantity}
-        onViewDetails={onViewDetails}
+const CartList = memo(
+  ({
+    cartItems,
+    onUpdateQuantity,
+    onRemoveItem,
+    onViewDetails,
+    ListFooterComponent,
+  }) => {
+    const renderItem = useCallback(
+      ({ item }) => (
+        <CartItem
+          item={item}
+          onUpdateQuantity={onUpdateQuantity}
+          onViewDetails={onViewDetails}
+        />
+      ),
+      [onUpdateQuantity, onViewDetails]
+    );
+
+    const renderHiddenItem = useCallback(
+      ({ item }) => <HiddenItem item={item} onRemove={onRemoveItem} />,
+      [onRemoveItem]
+    );
+
+    const keyExtractor = useCallback((item) => item.id, []);
+
+    return (
+      <SwipeListView
+        data={cartItems}
+        renderItem={renderItem}
+        renderHiddenItem={renderHiddenItem}
+        rightOpenValue={-75}
+        disableRightSwipe={true}
+        keyExtractor={keyExtractor}
+        style={{ flex: 1 }}
+        useFlatList={true}
+        ListFooterComponent={ListFooterComponent}
+        contentContainerStyle={{ paddingBottom: 200, paddingHorizontal: 20 }}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={5}
       />
-    ),
-    [onUpdateQuantity, onViewDetails]
-  );
+    );
+  }
+);
 
-  const renderHiddenItem = useCallback(
-    ({ item }) => <HiddenItem item={item} onRemove={onRemoveItem} />,
-    [onRemoveItem]
-  );
-
-  const keyExtractor = useCallback((item) => item.id, []);
-
-  return (
-    <SwipeListView
-      data={cartItems}
-      renderItem={renderItem}
-      renderHiddenItem={renderHiddenItem}
-      rightOpenValue={-75}
-      disableRightSwipe={true}
-      keyExtractor={keyExtractor}
-      style={{ flex: 1 }}
-      useFlatList={true}
-      ListFooterComponent={ListFooterComponent}
-      contentContainerStyle={{ paddingBottom: 200, paddingHorizontal: 20 }}
-      removeClippedSubviews={true}
-      maxToRenderPerBatch={10}
-      updateCellsBatchingPeriod={50}
-      initialNumToRender={10}
-      windowSize={5}
-    />
-  );
-});
-
-CartList.displayName = 'CartList';
+CartList.displayName = "CartList";
 
 // --- MyCart Component ---
 const MyCart = () => {
@@ -161,7 +178,7 @@ const MyCart = () => {
 
   // Get cart data
   const { cartItems, subtotal, emptyCart } = useCart();
-  
+
   // Get stable action functions
   const { updateQuantity, removeItem } = useCartActions();
 
@@ -175,33 +192,39 @@ const MyCart = () => {
 
   const total = subtotal + taxes + delivery;
 
-  const addresses = useMemo(() => [
-    {
-      id: "home",
-      title: "Home",
-      phone: "+91 888 888 8888",
-      address: "Gaur City 1 Club",
-    },
-    {
-      id: "office",
-      title: "Office",
-      phone: "(0261) 555-0115",
-      address: "2588 Ratan lal sahdev marg",
-    },
-  ], []);
+  const addresses = useMemo(
+    () => [
+      {
+        id: "home",
+        title: "Home",
+        phone: "+91 888 888 8888",
+        address: "Gaur City 1 Club",
+      },
+      {
+        id: "office",
+        title: "Office",
+        phone: "(0261) 555-0115",
+        address: "2588 Ratan lal sahdev marg",
+      },
+    ],
+    []
+  );
 
   const currentAddress = useMemo(
     () => addresses.find((addr) => addr.id === selectedAddress),
     [addresses, selectedAddress]
   );
 
-  const paymentOptions = useMemo(() => [
-    {
-      id: "gpay",
-      title: "Google Pay",
-      icon: require("../../assets/gpayicon.png"),
-    },
-  ], []);
+  const paymentOptions = useMemo(
+    () => [
+      {
+        id: "gpay",
+        title: "Google Pay",
+        icon: require("../../assets/gpayicon.png"),
+      },
+    ],
+    []
+  );
 
   const handleViewItemDetails = useCallback((item) => {
     const isDetailedItem = item.days || item.isAddOnBundle;
@@ -288,7 +311,13 @@ const MyCart = () => {
                       style={styles.paymentRow}
                       onPress={() => setPaymentMethod(method.id)}
                     >
-                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 10,
+                        }}
+                      >
                         <Image
                           source={method.icon}
                           style={{ width: 35, height: 35 }}
@@ -298,7 +327,9 @@ const MyCart = () => {
                         <Text style={styles.paymentText}>{method.title}</Text>
                       </View>
                       <View style={styles.radioOuter}>
-                        {paymentMethod === method.id && <View style={styles.radioInner} />}
+                        {paymentMethod === method.id && (
+                          <View style={styles.radioInner} />
+                        )}
                       </View>
                     </Pressable>
                   ))}
@@ -308,25 +339,35 @@ const MyCart = () => {
                     <Text style={styles.sectionTitle}>Summary</Text>
                     <View style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Sub total</Text>
-                      <Text style={styles.summaryValue}>₹{subtotal.toFixed(2)}</Text>
+                      <Text style={styles.summaryValue}>
+                        ₹{subtotal.toFixed(2)}
+                      </Text>
                     </View>
                     <View style={styles.summaryRow}>
                       <Text style={styles.summaryLabel}>Taxes & Fees</Text>
-                      <Text style={styles.summaryValue}>₹{taxes.toFixed(2)}</Text>
+                      <Text style={styles.summaryValue}>
+                        ₹{taxes.toFixed(2)}
+                      </Text>
                     </View>
                     {delivery.toFixed(2) < 1 ? (
                       <View style={styles.summaryRow}>
-                        <Text style={[styles.summaryLabel, styles.deliveryFreeText]}>
+                        <Text
+                          style={[styles.summaryLabel, styles.deliveryFreeText]}
+                        >
                           Delivery Fee
                         </Text>
-                        <Text style={[styles.summaryValue, styles.deliveryFreeText]}>
+                        <Text
+                          style={[styles.summaryValue, styles.deliveryFreeText]}
+                        >
                           Free
                         </Text>
                       </View>
                     ) : (
                       <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>Delivery Fee</Text>
-                        <Text style={styles.summaryValue}>₹{delivery.toFixed(2)}</Text>
+                        <Text style={styles.summaryValue}>
+                          ₹{delivery.toFixed(2)}
+                        </Text>
                       </View>
                     )}
                   </View>
@@ -420,19 +461,26 @@ const DeliveryBlock = memo(({ currentAddress, onOpenAddressSheet }) => (
   </View>
 ));
 
-DeliveryBlock.displayName = 'DeliveryBlock';
+DeliveryBlock.displayName = "DeliveryBlock";
 
 // --- Memoized Empty Cart View ---
 const EmptyCartView = memo(({ onNavigateHome }) => (
   <View style={styles.emptyContainer}>
-    <Text style={styles.emptyMessage}>Your cart is empty!</Text>
+    <Image
+      source={require("../../assets/empty_cart.jpg")}
+      style={{ width: 200, height: 200 }}
+      contentFit="contain"
+      transition={300}
+    />
+    <Text style={styles.emptyMessage}>ohh... Your cart is empty</Text>
+    <Text style={styles.emptySubMessage}>but it doesn't have to be.</Text>
     <CustomPressable onPress={onNavigateHome} style={styles.homeButton}>
-      <Text style={styles.homeButtonText}>Browse Bundles</Text>
+      <Text style={styles.homeButtonText}>Shop Now</Text>
     </CustomPressable>
   </View>
 ));
 
-EmptyCartView.displayName = 'EmptyCartView';
+EmptyCartView.displayName = "EmptyCartView";
 
 export default MyCart;
 
@@ -501,6 +549,11 @@ const styles = StyleSheet.create({
   emptyMessage: {
     fontSize: 18,
     color: "#666",
+    marginBottom: 3,
+  },
+  emptySubMessage: {
+    fontSize: 17,
+    color: "#9b9b9bff",
     marginBottom: 20,
   },
   homeButton: {

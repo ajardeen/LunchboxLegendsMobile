@@ -1,12 +1,6 @@
 /* --- Create this file, e.g., components/AddressChangeSheet.js --- */
 import React from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  Pressable,
-  ScrollView,
-} from "react-native";
+import { StyleSheet, Text, View, Pressable, ScrollView } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CustomPressable from "./UI/CustomPressable"; // Assuming this path
 
@@ -45,8 +39,12 @@ const AddressChangeSheet = ({
           );
         })}
       </ScrollView>
-      <CustomPressable style={styles.manageButton} onPress={handleManageAddress}>
+      <CustomPressable
+        style={styles.manageButton}
+        onPress={handleManageAddress}
+      >
         <Ionicons name="add-circle-outline" size={20} color="#fff" />
+
         <Text style={styles.manageButtonText}>Manage Addresses</Text>
       </CustomPressable>
     </View>
@@ -57,7 +55,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
-    width:"100%"
+    width: "100%",
   },
   addressRow: {
     flexDirection: "row",
