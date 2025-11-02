@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@gorhom/bottom-sheet": "^5.2.6",
+    "@react-native-clipboard/clipboard": "^1.16.3",
     "@react-native-picker/picker": "2.11.1",
     "expo": "~54.0.20",
+    "expo-clipboard": "~8.0.7",
     "expo-constants": "~18.0.10",
     "expo-image": "~3.0.10",
     "expo-linking": "~8.0.8",
