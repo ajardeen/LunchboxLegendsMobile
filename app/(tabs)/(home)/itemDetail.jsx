@@ -10,13 +10,13 @@ import {
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
-import CustomPressable from "../components/UI/CustomPressable";
-import { bundleData } from "../services/data";
-import CategoryIcon from "../components/CategoryIcon";
-import { useCart } from "../context/CartContext";
+import CustomPressable from "../../../components/UI/CustomPressable";
+import { bundleData } from "../../../services/data";
+import CategoryIcon from "../../../components/CategoryIcon";
+import { useCart } from "../../../context/CartContext";
 // --- Import the new component ---
-import AddOnSelector from "../components/AddOnSelector"; 
-import CustomBottomSheet from "../components/UI/CustomBottomSheet";
+import AddOnSelector from "../../../components/AddOnSelector"; 
+import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
 
 // Utility function (kept here for consistency)
 const getAddOnItemId = (bundleId, dayName) => `addon_bundle_${bundleId}_${dayName}`;
@@ -46,7 +46,7 @@ export default function ItemDetail() {
     );
   }
 
-  const placeholderImage = require("../assets/lblplaceholder.jpg");
+  const placeholderImage = require("../../../assets/lblplaceholder.jpg");
   const itemInCart = cartItems.find((cartItem) => cartItem.id === item.id);
 
   const handleAddToCart = () => {
@@ -84,7 +84,7 @@ export default function ItemDetail() {
     const button = itemInCart ? (
       // RENDER: View in Cart Button (Outline style)
       <CustomPressable
-        onPress={() => router.push("/myCart")}
+        onPress={() => router.push("(tabs)/(myCart)")}
         style={[styles.actionButton, styles.viewInCartBtn]} 
       >
         <Text style={[styles.subscribeText, styles.viewInCartText]}>

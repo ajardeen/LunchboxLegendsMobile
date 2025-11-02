@@ -8,7 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import CustomPressable from "../components/UI/CustomPressable";
+import CustomPressable from "../../../components/UI/CustomPressable";
 import * as Location from "expo-location";
 import { useState, useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";

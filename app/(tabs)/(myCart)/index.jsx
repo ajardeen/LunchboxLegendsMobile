@@ -7,14 +7,14 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
-import CustomPressable from "../../components/UI/CustomPressable";
+import CustomPressable from "../../../components/UI/CustomPressable";
 import { useRouter } from "expo-router";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../../context/CartContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import CustomBottomSheet from "../../components/UI/CustomBottomSheet";
-import AddressChangeSheet from "../../components/AddressChangeSheet";
-import CartItemDetailSheet from "../../components/CartItemDetailSheet";
+import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
+import AddressChangeSheet from "../../../components/AddressChangeSheet";
+import CartItemDetailSheet from "../../../components/CartItemDetailSheet";
 import { SwipeListView } from "react-native-swipe-list-view";
 
 // --- CRITICAL: Extract actions to avoid re-renders ---
@@ -220,7 +220,7 @@ const MyCart = () => {
       {
         id: "gpay",
         title: "Google Pay",
-        icon: require("../../assets/gpayicon.png"),
+        icon: require("../../../assets/gpayicon.png"),
       },
     ],
     []
@@ -252,7 +252,7 @@ const MyCart = () => {
   }, [cartItems.length, router, emptyCart]);
 
   const handleNavigateHome = useCallback(() => {
-    router.navigate("/home");
+    router.navigate("(tabs)/(home)");
   }, [router]);
 
   const handleSelectAddress = useCallback((id) => {
@@ -299,6 +299,7 @@ const MyCart = () => {
               onViewDetails={handleViewItemDetails}
               ListFooterComponent={
                 <View style={styles.scrollableFooterContent}>
+                  
                   <Text onPress={handleNavigateHome} style={styles.addMore}>
                     + Add more items
                   </Text>
@@ -467,7 +468,7 @@ DeliveryBlock.displayName = "DeliveryBlock";
 const EmptyCartView = memo(({ onNavigateHome }) => (
   <View style={styles.emptyContainer}>
     <Image
-      source={require("../../assets/empty_cart.jpg")}
+      source={require("../../../assets/empty_cart.jpg")}
       style={{ width: 200, height: 200 }}
       contentFit="contain"
       transition={300}
@@ -568,11 +569,7 @@ const styles = StyleSheet.create({
   },
   cartItemsContainer: {
     backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderColor: "#eee",
     borderRadius: 12,
-    padding: 5,
-    paddingTop: 5,
   },
   rowFront: {
     backgroundColor: "#fff",
@@ -666,13 +663,16 @@ const styles = StyleSheet.create({
     color: "#004346",
     fontSize: 15,
     fontWeight: "500",
-    marginBottom: 20,
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 17,
-    fontWeight: "700",
+    fontWeight: "bold",
     marginBottom: 10,
-    marginTop: 20,
+    marginTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    paddingBottom: 5,
   },
   paymentRow: {
     flexDirection: "row",

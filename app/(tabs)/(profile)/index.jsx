@@ -10,7 +10,7 @@ export default function Profile() {
     <View style={styles.container}>
       {/* Header Section */}
       <ImageBackground
-        source={require("../../assets/profile_bg_icon_group.png")}
+        source={require("../../../assets/profile_bg_icon_group.png")}
         contentFit="cover"
       >
         <View style={styles.header}>

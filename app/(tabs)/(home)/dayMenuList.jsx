@@ -8,8 +8,8 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { bundleData } from "../services/data";
-import CategoryIcon from "../components/CategoryIcon";
+import { bundleData } from "../../../services/data";
+import CategoryIcon from "../../../components/CategoryIcon";
 
 export default function DayMenuList() {
   const router = useRouter();
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 50,
+    paddingTop: 20,
     paddingBottom: 15,
     paddingHorizontal: 15,
     backgroundColor: "#fff",
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
     fontSize: 13,
   },
- 
+
   itemRight: {
     alignItems: "flex-end",
     flexDirection: "column",

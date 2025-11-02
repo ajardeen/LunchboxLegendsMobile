@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { StyleSheet, Text, View, Animated } from "react-native";
 import { Image } from "expo-image";
-import CustomPressable from "../components/UI/CustomPressable";
+import CustomPressable from "../../../components/UI/CustomPressable";
 import { useRouter } from "expo-router";
 
-const PaymentSuccessScreen = ({ navigation }) => {
+const paymentSuccessScreen = ({ navigation }) => {
   const router = useRouter();
 
   const gifFadeAnim = useRef(new Animated.Value(0)).current;
@@ -33,7 +33,7 @@ const PaymentSuccessScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Animated.View style={{ opacity: gifFadeAnim }}>
         <Image
-          source={require("../assets/payment_success.gif")}
+          source={require("../../../assets/payment_success.gif")}
           style={styles.gif}
         />
       </Animated.View>
@@ -57,7 +57,7 @@ const PaymentSuccessScreen = ({ navigation }) => {
   );
 };
 
-export default PaymentSuccessScreen;
+export default paymentSuccessScreen;
 
 const styles = StyleSheet.create({
   container: {

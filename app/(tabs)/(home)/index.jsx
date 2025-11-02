@@ -7,9 +7,9 @@ import {
   Platform,
 } from "react-native";
 import { useState } from "react";
-import AdBanner from "../../components/AdBanner";
-import SubscriptionCard from "../../components/SubscriptionCard";
-import { bundleData } from "../../services/data";
+import AdBanner from "../../../components/AdBanner";
+import SubscriptionCard from "../../../components/SubscriptionCard";
+import { bundleData } from "../../../services/data";
 
 export default function Home() {
   const [data, setData] = useState(bundleData);

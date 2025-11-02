@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 // 1. Import BottomSheetBackdrop
 import BottomSheet, {
   BottomSheetView,
+    BottomSheetKeyboardAvoidingView,
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
 

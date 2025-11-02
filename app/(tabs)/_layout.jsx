@@ -16,7 +16,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="home"
+        name="(home)"
         options={{
           title: "Home",
           tabBarIcon: ({ color, size, focused }) => (
@@ -31,7 +31,7 @@ export default function TabsLayout() {
 
      
       <Tabs.Screen
-        name="order"
+        name="(order)"
         options={{
           title: "Orders",
           tabBarIcon: ({ color, size, focused }) => (
@@ -44,7 +44,7 @@ export default function TabsLayout() {
         }}
       />
        <Tabs.Screen
-        name="myCart"
+        name="(myCart)"
         options={{
           title: "Cart",
           tabBarIcon: ({ color, size, focused }) => (
@@ -59,7 +59,7 @@ export default function TabsLayout() {
 
 
       <Tabs.Screen
-        name="profile"
+        name="(profile)"
         options={{
           title: "Profile",
           tabBarIcon: ({ color, size, focused }) => (
