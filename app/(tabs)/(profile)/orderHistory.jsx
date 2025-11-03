@@ -40,7 +40,7 @@ const OrderHistory = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Order History</Text>
+      {/* <Text style={styles.header}>Order History</Text> */}
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {orders.map((item) => (

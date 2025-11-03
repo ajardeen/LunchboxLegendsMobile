@@ -245,7 +245,7 @@ const MyCart = () => {
     } finally {
       setTimeout(() => {
         setIsProcessing(false);
-        router.push("/PaymentSuccessScreen");
+        router.push("/paymentSuccessScreen");
         emptyCart();
       }, 2000);
     }
@@ -414,7 +414,7 @@ const MyCart = () => {
       <CustomBottomSheet
         ref={addressChangeSheetRef}
         title="Change Delivery Address"
-        snapPoints={["45%", "60%"]}
+        snapPoints={["35%","60%"]}
         initialIndex={-1}
       >
         <AddressChangeSheet

@@ -313,12 +313,12 @@ const styles = StyleSheet.create({
     marginBottom: 100, 
   },
   menuHeader: {
-    marginBottom: 15,
+    marginBottom: 5,
   },
   menuHeaderText: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#004346",
     paddingVertical: 10,
   },
   dayCard: {
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 15,
+    paddingBottom: 15,
     paddingHorizontal: 5,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',

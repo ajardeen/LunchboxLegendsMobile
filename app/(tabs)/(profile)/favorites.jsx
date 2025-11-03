@@ -18,7 +18,7 @@ const favoritesData = [
 const Favorites = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Favorite Dishes</Text>
+      {/* <Text style={styles.title}>Your Favorite Dishes</Text> */}
 
       <FlatList
         data={favoritesData}

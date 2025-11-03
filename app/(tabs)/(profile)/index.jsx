@@ -3,7 +3,7 @@ import { useRouter } from "expo-router";
 import { Ionicons, MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { ImageBackground } from "expo-image";
 
-export default function Profile() {
+export default function profile() {
   const router = useRouter();
 
   return (

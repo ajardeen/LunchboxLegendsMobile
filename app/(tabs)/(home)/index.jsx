@@ -6,13 +6,15 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import AdBanner from "../../../components/AdBanner";
 import SubscriptionCard from "../../../components/SubscriptionCard";
 import { bundleData } from "../../../services/data";
+import { RefreshControl } from "react-native-gesture-handler";
 
 export default function Home() {
   const [data, setData] = useState(bundleData);
+  const [refreshing, setRefreshing] = useState(false);
   const [active, setActive] = useState("ALL");
   const tabs = ["ALL", "Veg", "Non Veg"];
   const name = "Lunchbox Legends";
@@ -25,9 +27,25 @@ export default function Home() {
       return bundle.category === "non-veg" || bundle.category === "mix";
     return false;
   });
-
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate re-fetch
+    setTimeout(() => {
+      console.log("refreshing");
+      setRefreshing(false);
+    }, 1500);
+  }, []);
   return (
-    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <ScrollView
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#007AFF"]}
+        />
+      }
+      contentContainerStyle={styles.scrollViewContent}
+    >
       {/* Header */}
       <View style={styles.headerContainer}>
         <Text style={[styles.headerTitle, styles.textWhite]}>{name}</Text>

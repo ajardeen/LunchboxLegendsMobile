@@ -54,7 +54,7 @@ const AddressChangeSheet = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 15,
+    paddingHorizontal: 15,
     width: "100%",
   },
   addressRow: {

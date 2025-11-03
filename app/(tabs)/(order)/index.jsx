@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Pressable,
+  RefreshControl,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,7 +26,7 @@ const getStatusStyling = (status) => {
   }
 };
 
-// ✅ All Orders JSON with orderSteps added
+// ✅ Simulated order data
 const ALL_ORDERS_DATA = {
   today_orders: [
     {
@@ -34,36 +35,6 @@ const ALL_ORDERS_DATA = {
       delivery: "Tue, Dec 3, 2025",
       status: "arrive in 15min",
       eta: "15 min",
-      orderSteps: [
-        {
-          id: 1,
-          title: "Order Confirmed",
-          subtitle: "We’ve received your order",
-          time: "5:00 PM",
-          completed: true,
-        },
-        {
-          id: 2,
-          title: "Preparing your meal",
-          subtitle: "The chef started cooking",
-          time: "5:10 PM",
-          completed: true,
-        },
-        {
-          id: 3,
-          title: "Out for Delivery",
-          subtitle: "Your food is on the way",
-          time: "5:30 PM",
-          completed: false,
-        },
-        {
-          id: 4,
-          title: "Delivered",
-          subtitle: "Enjoy your meal!",
-          time: "--",
-          completed: false,
-        },
-      ],
     },
     {
       id: "#2155678",
@@ -71,36 +42,6 @@ const ALL_ORDERS_DATA = {
       delivery: "Wed, Dec 4, 2025",
       status: "Preparing",
       eta: "25 min",
-      orderSteps: [
-        {
-          id: 1,
-          title: "Order Confirmed",
-          subtitle: "We’ve received your order",
-          time: "3:45 PM",
-          completed: true,
-        },
-        {
-          id: 2,
-          title: "Preparing your meal",
-          subtitle: "Your food is being cooked",
-          time: "3:55 PM",
-          completed: false,
-        },
-        {
-          id: 3,
-          title: "Out for Delivery",
-          subtitle: "Your food will be dispatched soon",
-          time: "--",
-          completed: false,
-        },
-        {
-          id: 4,
-          title: "Delivered",
-          subtitle: "Enjoy your meal!",
-          time: "--",
-          completed: false,
-        },
-      ],
     },
     {
       id: "#2150000",
@@ -108,36 +49,6 @@ const ALL_ORDERS_DATA = {
       delivery: "Tue, Dec 3, 2025",
       status: "Delivered",
       eta: "Delivered",
-      orderSteps: [
-        {
-          id: 1,
-          title: "Order Confirmed",
-          subtitle: "We’ve received your order",
-          time: "9:00 AM",
-          completed: true,
-        },
-        {
-          id: 2,
-          title: "Preparing your meal",
-          subtitle: "Blending your smoothie",
-          time: "9:05 AM",
-          completed: true,
-        },
-        {
-          id: 3,
-          title: "Out for Delivery",
-          subtitle: "Your smoothie is on the way",
-          time: "9:20 AM",
-          completed: true,
-        },
-        {
-          id: 4,
-          title: "Delivered",
-          subtitle: "Enjoy your healthy treat!",
-          time: "9:35 AM",
-          completed: true,
-        },
-      ],
     },
   ],
   upcoming_orders: [
@@ -148,44 +59,6 @@ const ALL_ORDERS_DATA = {
       status: "Upcoming",
       isDisabled: true,
       eta: "Tomorrow",
-      orderSteps: [
-        {
-          id: 1,
-          title: "Order Confirmed",
-          subtitle: "Your order is scheduled for tomorrow",
-          time: "--",
-          completed: false,
-        },
-        {
-          id: 2,
-          title: "Preparing your meal",
-          subtitle: "Cooking will start tomorrow",
-          time: "--",
-          completed: false,
-        },
-        {
-          id: 3,
-          title: "Out for Delivery",
-          subtitle: "Delivery expected tomorrow evening",
-          time: "--",
-          completed: false,
-        },
-        {
-          id: 4,
-          title: "Delivered",
-          subtitle: "Order will be delivered soon",
-          time: "--",
-          completed: false,
-        },
-      ],
-      details: {
-        items: [
-          { name: "Chicken Biriyani (Large)", quantity: 1, notes: "Extra spicy" },
-          { name: "Raita", quantity: 1, notes: "No onions" },
-        ],
-        deliveryInstruction: "Call when arrive, apartment 4B. Use back gate.",
-        totalAmount: 45.99,
-      },
     },
   ],
 };
@@ -204,15 +77,34 @@ export default function Order() {
     upcoming_orders: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // ✅ Simulate data fetch
+  // ✅ Simulate initial fetch
   useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = useCallback(() => {
+    console.log("fetching");
+    
     setIsLoading(true);
-    const timer = setTimeout(() => {
+    // Simulate API fetch
+    setTimeout(() => {
       setOrdersData(ALL_ORDERS_DATA);
       setIsLoading(false);
     }, 1500);
-    return () => clearTimeout(timer);
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate re-fetch
+    setTimeout(() => {
+      console.log("refreshing");
+      
+      fetchOrders();
+      setOrdersData(ALL_ORDERS_DATA);
+      setRefreshing(false);
+    }, 1500);
   }, []);
 
   const todayOrders = ordersData.today_orders;
@@ -228,7 +120,6 @@ export default function Order() {
 
     const handlePress = () => {
       if (isOrderDisabled) return;
-      console.log("📦 Sending Order Data →", item);
       router.push({
         pathname: "/orderTracker",
         params: { orderData: JSON.stringify(item) },
@@ -266,13 +157,6 @@ export default function Order() {
             >
               {item.delivery}
             </Text>
-
-            {item.details && (
-              <View style={styles.detailIndicator}>
-                <Ionicons name="document-text-outline" size={12} color="#4F46E5" />
-                <Text style={styles.detailText}>Details attached</Text>
-              </View>
-            )}
           </View>
 
           <View style={styles.orderRight}>
@@ -306,7 +190,7 @@ export default function Order() {
     );
   };
 
-  if (isLoading) {
+  if (isLoading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -316,7 +200,12 @@ export default function Order() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
+      }
+    >
       <Text style={styles.title}>Track Order</Text>
 
       <Text style={styles.sectionTitle}>
@@ -363,8 +252,6 @@ const styles = StyleSheet.create({
   orderSubtitle: { color: "#374151", fontSize: 13, marginBottom: 6 },
   deliveryLabel: { color: "#6B7280", fontSize: 12 },
   deliveryDate: { fontSize: 12, color: "#111827" },
-  detailIndicator: { flexDirection: "row", alignItems: "center", marginTop: 8, paddingHorizontal: 6, paddingVertical: 3, backgroundColor: "#EEF2FF", borderRadius: 6, alignSelf: "flex-start" },
-  detailText: { fontSize: 10, fontWeight: "700", color: "#4F46E5", marginLeft: 4 },
   orderRight: { alignItems: "flex-end", justifyContent: "space-between" },
   orderId: { color: "#6B7280", fontSize: 11, marginBottom: 4 },
   statusRow: { flexDirection: "row", alignItems: "center" },

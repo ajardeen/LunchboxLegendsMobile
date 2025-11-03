@@ -42,70 +42,48 @@ const ProfileField = ({ label, value }) => (
   </View>
 );
 
-// --- Radio Button Component ---
-const RadioButton = ({ selected, onPress, label, address }) => (
-  <Pressable
-    style={styles.radioContainer}
-    onPress={onPress}
-    android_ripple={{ color: "#e0e0e0" }}
-  >
-    <View style={styles.radioCircle}>
-      {selected && <View style={styles.radioSelected} />}
-    </View>
-    <View style={styles.addressInfo}>
-      <Text style={styles.addressLabel}>{label}</Text>
-      <Text style={styles.addressText}>{address}</Text>
-    </View>
-  </Pressable>
-);
-
-// --- Component for Address Selection ---
-const AddressSelector = ({ addresses, selectedId, onSelect, router }) => (
+// --- Component to Display Selected Address ---
+const DeliveryAddress = ({ address, router }) => (
   <View style={styles.fieldContainer}>
     <Text style={[styles.label, { marginBottom: 10 }]}>Delivery Address</Text>
-    {addresses.map((addr) => (
-      <RadioButton
-        key={addr.id}
-        selected={selectedId === addr.id}
-        onPress={() => onSelect(addr.id)}
-        label={addr.label}
-        address={addr.address}
-      />
-    ))}
-    <Pressable style={styles.addAddressButton}>
-      <MaterialIcons name="add-circle-outline" size={20} color="#007AFF" />
-      <TouchableOpacity onPress={() => router.navigate("addressScreen")}>
-        <Text style={styles.addAddressText}>Add New Address</Text>
+    <View style={styles.addressDisplayBox}>
+      <View style={styles.addressInfo}>
+        <Text style={styles.addressLabel}>{address.label}</Text>
+        <Text style={styles.addressText}>{address.address}</Text>
+      </View>
+      <TouchableOpacity
+        style={styles.addAddressButton}
+        onPress={() => router.navigate("addressScreen")}
+      >
+        <MaterialIcons name="edit" size={20} color="#004346" />
+        <Text style={styles.addAddressText}>Manage</Text>
       </TouchableOpacity>
-    </Pressable>
+    </View>
   </View>
 );
 
 // --- Main Profile Component ---
 const ProfileDetails = () => {
   const router = useRouter();
+  // This would typically come from a global state or be fetched.
   const [selectedAddressId, setSelectedAddressId] = useState(1);
+
+  // Find the selected address object to display
+  const selectedAddress = userData.addresses.find(
+    (a) => a.id === selectedAddressId
+  );
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.header}>My Profile</Text>
+      <View style={styles.profileCard}>
+        {/* Basic Details */}
+        <ProfileField label="Full Name" value={userData.name} />
+        <ProfileField label="Email" value={userData.email} />
+        <ProfileField label="Phone Number" value={userData.phone} />
 
-      {/* Basic Details */}
-      <ProfileField label="Full Name" value={userData.name} />
-      <ProfileField label="Email" value={userData.email} />
-      <ProfileField label="Phone Number" value={userData.phone} />
-
-      <View style={styles.separator} />
-
-      {/* Address Selection with Radio Buttons */}
-      <AddressSelector
-        addresses={userData.addresses}
-        selectedId={selectedAddressId}
-        onSelect={setSelectedAddressId}
-        router={router}
-      />
-
-      <View style={styles.separator} />
+        {/* Display Selected Address */}
+        <DeliveryAddress address={selectedAddress} router={router} />
+      </View>
     </ScrollView>
   );
 };
@@ -116,87 +94,64 @@ export default ProfileDetails;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#fff",
     padding: 20,
   },
-  header: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 30,
-    textAlign: "center",
+  profileCard: {
+    backgroundColor: "#F9FAFB", // Muted background
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   fieldContainer: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 15,
-    paddingVertical: 18,
-    borderRadius: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#eee",
+    marginBottom: 20,
   },
   label: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
-    marginBottom: 4,
+    fontSize: 13,
+    color: "#004346", // Theme color
+    fontWeight: "600",
+    marginBottom: 5,
+    textTransform: "uppercase",
   },
   value: {
-    fontSize: 18,
-    color: "#000",
-    fontWeight: "600",
+    fontSize: 16,
+    color: "#1F2937",
+    fontWeight: "500",
   },
-  separator: {
-    height: 15,
-  },
-  radioContainer: {
+  addressDisplayBox: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  radioCircle: {
-    height: 22,
-    width: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: "#007AFF",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    marginTop: 2,
-  },
-  radioSelected: {
-    height: 12,
-    width: 12,
-    borderRadius: 6,
-    backgroundColor: "#007AFF",
+    justifyContent: "space-between",
   },
   addressInfo: {
     flex: 1,
   },
   addressLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "600",
     color: "#333",
     marginBottom: 4,
   },
   addressText: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#666",
-    lineHeight: 20,
+    lineHeight: 18,
   },
   addAddressButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    marginTop: 8,
+    justifyContent: "center",
+    alignSelf: "center",
   },
   addAddressText: {
-    color: "#007AFF",
-    fontSize: 15,
+    color: "#004346", // Theme color
+    fontSize: 14,
     fontWeight: "600",
-    marginLeft: 8,
+    marginLeft: 5,
   },
 });

@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 const Help = () => {
   return (
     <View style={styles.container}>
-      <Ionicons name="help-circle-outline" size={80} color="#FF6B00" />
+      <Ionicons name="help-circle-outline" size={80} color="#004346" />
       <Text style={styles.title}>Need Help?</Text>
       <Text style={styles.subtitle}>
         Feel free to ask! Our support team is always here to assist you.
@@ -17,8 +17,8 @@ const Help = () => {
       </TouchableOpacity>
 
       <TouchableOpacity style={[styles.button, styles.secondary]}>
-        <Ionicons name="mail-outline" size={20} color="#FF6B00" />
-        <Text style={[styles.buttonText, { color: "#FF6B00" }]}>Send Email</Text>
+        <Ionicons name="mail-outline" size={20} color="#004346" />
+        <Text style={[styles.buttonText, { color: "#004346" }]}>Send Email</Text>
       </TouchableOpacity>
     </View>
   );
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FF6B00",
+    backgroundColor: "#004346",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
   secondary: {
     backgroundColor: "#fff",
     borderWidth: 1.5,
-    borderColor: "#FF6B00",
+    borderColor: "#004346",
   },
   buttonText: {
     color: "#fff",

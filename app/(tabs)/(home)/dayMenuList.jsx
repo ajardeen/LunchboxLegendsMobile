@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   menuHeaderText: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#004346",
     marginVertical: 15,
   },
   menuItemRow: {

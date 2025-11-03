@@ -7,9 +7,10 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import CustomPressable from "./UI/CustomPressable"; // Adjust path as necessary
+import CustomPressable from "./UI/CustomPressable";
 
 // --- UNIVERSAL ADD-ON DATA ---
 const addOnData = [
@@ -62,26 +63,21 @@ const AddOnSelector = ({
   addToCart,
   onClose,
 }) => {
-  // State to track the currently selected day for add-ons (default to the first day)
   const [selectedAddOnDay, setSelectedAddOnDay] = useState(
     itemDays[0]?.day || null
   );
 
-  // State to track the quantity of each add-on being selected
   const [selectedAddOns, setSelectedAddOns] = useState({});
   const [isApplyingAddons, setIsApplyingAddons] = useState(false);
 
-  // Effect to re-initialize add-on state whenever the selected day changes
   const initializeAddOnStateForDay = useCallback(
     (day) => {
       setSelectedAddOnDay(day);
 
-      // Find the specific add-on bundle for this day in the cart
       const dayAddOnBundle = cartItems.find(
         (cartItem) => cartItem.id === getAddOnItemId(bundleId, day)
       );
 
-      // Initialize state based on the bundle's current products
       const initialAddOns =
         dayAddOnBundle?.products?.reduce((acc, p) => {
           acc[p.id] = p.quantity;
@@ -93,7 +89,6 @@ const AddOnSelector = ({
     [cartItems, bundleId]
   );
 
-  // Calculate total price and item count for the Add-on button in the sheet
   const addOnsTotal = useMemo(() => {
     let total = 0;
     let count = 0;
@@ -105,7 +100,6 @@ const AddOnSelector = ({
     return { total, count };
   }, [selectedAddOns]);
 
-  // Function to update the quantity of a specific add-on
   const handleUpdateAddOn = (addOnId, delta) => {
     setSelectedAddOns((prev) => {
       const currentQty = prev[addOnId] || 0;
@@ -121,7 +115,6 @@ const AddOnSelector = ({
     });
   };
 
-  // Function to apply the selected add-ons by creating a single bundled item in the cart
   const handleApplyAddOns = () => {
     if (!selectedAddOnDay) {
       setIsApplyingAddons(false);
@@ -130,7 +123,6 @@ const AddOnSelector = ({
 
     setIsApplyingAddons(true);
 
-    // 1. Build the array of products and calculate total price
     let totalProductPrice = 0;
     const products = addOnData
       .filter((addOn) => selectedAddOns[addOn.id] > 0)
@@ -146,7 +138,6 @@ const AddOnSelector = ({
         };
       });
 
-    // 2. Create the unified Add-On Bundle item
     const addOnBundleItem = {
       id: getAddOnItemId(bundleId, selectedAddOnDay),
       name: `Add-ons for ${selectedAddOnDay}`,
@@ -158,10 +149,8 @@ const AddOnSelector = ({
       products: products,
     };
 
-    // 3. Add to cart
     addToCart(addOnBundleItem);
 
-    // 4. Console log the data
     console.log("--- Add-On Bundle Added/Updated ---");
     console.log("Day:", addOnBundleItem.day);
     console.log("Total Price:", addOnBundleItem.price);
@@ -170,22 +159,57 @@ const AddOnSelector = ({
 
     setTimeout(() => {
       setIsApplyingAddons(false);
-      onClose(); // Close the sheet after applying
+      onClose();
     }, 500);
+  };
+
+  const renderAddOnItem = ({ item: addOn }) => {
+    const quantity = selectedAddOns[addOn.id] || 0;
+
+    return (
+      <View style={styles.addOnItem}>
+        <View style={styles.addOnDetails}>
+          <Text style={styles.addOnName}>{addOn.name}</Text>
+          <Text style={styles.addOnPrice}>+ ₹{addOn.price}</Text>
+        </View>
+        <View style={styles.addOnControls}>
+          <CustomPressable
+            onPress={() => handleUpdateAddOn(addOn.id, -1)}
+            style={[
+              styles.quantityButton,
+              quantity === 0 && { borderColor: "#D1D5DB" },
+            ]}
+            disabled={quantity === 0}
+          >
+            <Ionicons
+              name="remove-outline"
+              size={20}
+              color={quantity > 0 ? "#1E1E1E" : "#D1D5DB"}
+            />
+          </CustomPressable>
+
+          <Text style={styles.addOnQuantity}>{quantity}</Text>
+
+          <CustomPressable
+            onPress={() => handleUpdateAddOn(addOn.id, 1)}
+            style={styles.quantityButton}
+          >
+            <Ionicons name="add-outline" size={20} color="#1E1E1E" />
+          </CustomPressable>
+        </View>
+      </View>
+    );
   };
 
   return (
     <View style={styles.addOnsContainer}>
-      {/* Horizontal Day Selector */}
-      <ScrollView
+      {/* Horizontal Day Selector - Using FlatList */}
+      <FlatList
         horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.daySelectorScroll} // This will now scroll correctly
-        contentContainerStyle={styles.daySelectorContainer}
-      >
-        {itemDays.map((dayObj) => (
+        data={itemDays}
+        keyExtractor={(item) => item.day}
+        renderItem={({ item: dayObj }) => (
           <CustomPressable
-            key={dayObj.day}
             onPress={() => initializeAddOnStateForDay(dayObj.day)}
             style={[
               styles.dayTag,
@@ -201,54 +225,22 @@ const AddOnSelector = ({
               {dayObj.day}
             </Text>
           </CustomPressable>
-        ))}
-      </ScrollView>
+        )}
+        showsHorizontalScrollIndicator={false}
+        style={styles.daySelectorScroll}
+        contentContainerStyle={styles.daySelectorContainer}
+      />
 
-      <ScrollView
-        style={styles.addOnsScrollArea}
-        contentContainerStyle={styles.addOnsScrollContent}
-      >
-        {addOnData.map((addOn) => {
-          const quantity = selectedAddOns[addOn.id] || 0;
-
-          return (
-            <View key={addOn.id} style={styles.addOnItem}>
-              <View style={styles.addOnDetails}>
-                <Text style={styles.addOnName}>{addOn.name}</Text>
-                <Text style={styles.addOnPrice}>+ ₹{addOn.price}</Text>
-              </View>
-              <View style={styles.addOnControls}>
-                {/* Minus Button */}
-                <CustomPressable
-                  onPress={() => handleUpdateAddOn(addOn.id, -1)}
-                  style={[
-                    styles.quantityButton,
-                    quantity === 0 && { borderColor: "#D1D5DB" },
-                  ]}
-                  disabled={quantity === 0}
-                >
-                  <Ionicons
-                    name="remove-outline"
-                    size={20}
-                    color={quantity > 0 ? "#1E1E1E" : "#D1D5DB"}
-                  />
-                </CustomPressable>
-
-                {/* Quantity */}
-                <Text style={styles.addOnQuantity}>{quantity}</Text>
-
-                {/* Plus Button */}
-                <CustomPressable
-                  onPress={() => handleUpdateAddOn(addOn.id, 1)}
-                  style={styles.quantityButton}
-                >
-                  <Ionicons name="add-outline" size={20} color="#1E1E1E" />
-                </CustomPressable>
-              </View>
-            </View>
-          );
-        })}
-      </ScrollView>
+      {/* Add-on Items List - Using FlatList */}
+      <FlatList
+        data={addOnData}
+        keyExtractor={(item) => item.id}
+        renderItem={renderAddOnItem}
+        style={styles.addOnsListContainer}
+        contentContainerStyle={styles.addOnsListContent}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      />
 
       {/* Absolute Footer Button */}
       <View style={styles.addOnFooter}>
@@ -272,21 +264,19 @@ const AddOnSelector = ({
 
 export default AddOnSelector;
 
-// --- STYLES FOR ADD-ON COMPONENT ---
 const styles = StyleSheet.create({
   addOnsContainer: {
     flex: 1,
     width: "100%",
-    paddingBottom: 80, // Space for the absolute footer button inside the sheet
+    marginTop:10
   },
   daySelectorScroll: {
     maxHeight: 50,
-    marginBottom: 10,
-    width: "100%", // Ensure it takes full width
+    flexGrow: 0,
+    flexShrink: 0,
+    marginBottom: 15,
   },
   daySelectorContainer: {
-    paddingVertical: 5,
-    // Add horizontal padding here so the scroll starts and ends with some space
     paddingHorizontal: 15,
   },
   dayTag: {
@@ -311,11 +301,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  addOnsScrollArea: {
+  addOnsListContainer: {
     flex: 1,
   },
-  addOnsScrollContent: {
-    paddingHorizontal: 15, // Apply padding to the content of this scroll view
+  addOnsListContent: {
+    paddingHorizontal: 15,
+    paddingBottom: 100,
   },
   addOnItem: {
     flexDirection: "row",

@@ -1,19 +1,16 @@
 import React, { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import { View, Text, StyleSheet } from "react-native";
-// 1. Import BottomSheetBackdrop
 import BottomSheet, {
   BottomSheetView,
-    BottomSheetKeyboardAvoidingView,
   BottomSheetBackdrop,
 } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const CustomBottomSheet = forwardRef(
-  ({ children, title, initialIndex,snapPoints =["45%", "75%"] }, ref) => {
+  ({ children, title, initialIndex, snapPoints = ["45%", "75%"] }, ref) => {
     const sheetRef = useRef(null);
-    // const snapPoints = useMemo(() => ["45%", "75%"], []);
 
     useImperativeHandle(ref, () => ({
-     
       open: () => sheetRef.current?.snapToIndex(snapPoints.length - 1),
       close: () => sheetRef.current?.close(),
     }));
@@ -22,9 +19,9 @@ const CustomBottomSheet = forwardRef(
       (props) => (
         <BottomSheetBackdrop
           {...props}
-          disappearsOnIndex={-1} 
-          appearsOnIndex={0} 
-          opacity={0.5} 
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          opacity={0.5}
           pressBehavior="close"
         />
       ),
@@ -34,13 +31,16 @@ const CustomBottomSheet = forwardRef(
     return (
       <BottomSheet
         ref={sheetRef}
-        index={initialIndex !== undefined ? initialIndex : -1} 
+        index={initialIndex !== undefined ? initialIndex : -1}
         snapPoints={snapPoints}
         enablePanDownToClose
         backdropComponent={renderBackdrop}
+        enableContentPanningGesture={false}
       >
-        <BottomSheetView style={styles.contentContainer}>
-          {title && <Text style={styles.title}>{title}</Text>}
+        <BottomSheetView style={styles.container}>
+          <View style={styles.headerContainer}>
+            {title && <Text style={styles.title}>{title}</Text>}
+          </View>
           {children}
         </BottomSheetView>
       </BottomSheet>
@@ -51,14 +51,19 @@ const CustomBottomSheet = forwardRef(
 export default CustomBottomSheet;
 
 const styles = StyleSheet.create({
-  contentContainer: {
+  container: {
     flex: 1,
-    alignItems: "center",
-    padding: 20,
+  },
+  headerContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
+    color: "#111827",
   },
 });

@@ -8,10 +8,33 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { Pressable } from "react-native";
 import CustomPressable from "../../../components/UI/CustomPressable";
 import * as Location from "expo-location";
 import { useState, useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
+import { useRouter } from "expo-router";
+
+// --- Placeholder Data (same as in profileDetails) ---
+const userData = {
+  addresses: [
+    {
+      id: 1,
+      label: "Home",
+      address: "H-504, Gaur City 1, Noida, UP - 201009",
+    },
+    {
+      id: 2,
+      label: "Office",
+      address: "Tower B, Sector 62, Noida, UP - 201301",
+    },
+    {
+      id: 3,
+      label: "Other",
+      address: "Flat 302, Green Park Apartments, Delhi - 110016",
+    },
+  ],
+};
 
 const addressScreen = () => {
   const [location, setLocation] = useState(null);
@@ -20,6 +43,7 @@ const addressScreen = () => {
   const [errorMsg, setErrorMsg] = useState(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState(1);
 
   // Form states
   const [addressLabel, setAddressLabel] = useState("home");
@@ -29,6 +53,8 @@ const addressScreen = () => {
   const [region, setRegion] = useState("");
   const [pinCode, setPinCode] = useState("");
   const [country, setCountry] = useState("");
+
+  const router = useRouter();
 
   // Function to prompt user and open settings
   const promptOpenSettings = () => {
@@ -174,14 +200,47 @@ const addressScreen = () => {
     // Example: await AsyncStorage.setItem(`address_${finalLabel}`, JSON.stringify(savedAddress));
   };
 
+  const handleSelectAddress = (id) => {
+    setSelectedAddressId(id);
+    // In a real app, you would save this preference and update the global state.
+    console.log(`Selected address ID: ${id}. Navigating back.`);
+    // Optionally navigate back after selection
+    // router.back();
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         {errorMsg && <Text style={styles.errorText}>🛑 {errorMsg}</Text>}
 
+        {/* Address Selection List */}
+        <View style={styles.selectionContainer}>
+          <Text style={styles.formTitle}>Select Delivery Address</Text>
+          {userData.addresses.map((addr) => {
+            const isSelected = addr.id === selectedAddressId;
+            return (
+              <Pressable
+                key={addr.id}
+                style={styles.radioContainer}
+                onPress={() => handleSelectAddress(addr.id)}
+              >
+                <View style={styles.radioCircle}>
+                  {isSelected && <View style={styles.radioSelected} />}
+                </View>
+                <View style={styles.addressInfo}>
+                  <Text style={styles.addressLabel}>{addr.label}</Text>
+                  <Text style={styles.addressText}>{addr.address}</Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.separator} />
+
         {/* Form always visible */}
         <View style={styles.formContainer}>
-          <Text style={styles.formTitle}>Address Details</Text>
+          <Text style={styles.formTitle}>Add New Address</Text>
 
           {/* Address Label Picker */}
           <View style={styles.inputGroup}>
@@ -319,12 +378,24 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     backgroundColor: "#fff",
   },
+  selectionContainer: {
+    padding: 16,
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: "#fafafa",
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
     paddingVertical: 20,
     paddingHorizontal: 20,
+  },
+  separator: {
+    height: 1,
+    width: "90%",
+    backgroundColor: "#E5E7EB",
+    marginVertical: 20,
   },
   locationButton: {
     backgroundColor: "#2196F3",
@@ -406,5 +477,43 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     marginTop: 15,
     alignItems: "center",
+  },
+  // Styles for Radio Button List
+  radioContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  radioCircle: {
+    height: 22,
+    width: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: "#004346",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+    marginTop: 2,
+  },
+  radioSelected: {
+    height: 12,
+    width: 12,
+    borderRadius: 6,
+    backgroundColor: "#004346",
+  },
+  addressInfo: {
+    flex: 1,
+  },
+  addressLabel: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#333",
+  },
+  addressText: {
+    fontSize: 13,
+    color: "#666",
+    lineHeight: 18,
   },
 });

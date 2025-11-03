@@ -48,7 +48,7 @@ const paymentSuccessScreen = ({ navigation }) => {
       <Animated.View style={{ opacity: fadeAnim }}>
         <CustomPressable
           style={styles.button}
-          onPress={() => router.navigate("/home")}
+          onPress={() => router.navigate("(tabs)/(home)")}
         >
           <Text style={styles.buttonText}>Back to Home</Text>
         </CustomPressable>
