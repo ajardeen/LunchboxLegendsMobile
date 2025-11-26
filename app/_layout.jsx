@@ -5,31 +5,35 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { CartProvider } from "../context/CartContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
-    <CartProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <SafeAreaProvider>
-          <SafeAreaView style={styles.safeArea}>
-            <StatusBar style="dark" backgroundColor="#fff" />
+    <QueryClientProvider client={queryClient}>
+      <CartProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <SafeAreaProvider>
+            <SafeAreaView style={styles.safeArea}>
+              <StatusBar style="dark" backgroundColor="#fff" />
 
-            <Stack
-              screenOptions={{
-                headerShown: false,
-                animation: "slide_from_right",
-                animationDuration: 50,
-                animationTypeForReplace: "push",
-                gestureEnabled: true,
-                lazy: false,
-              }}
-            >
-              <Stack.Screen name="(tabs)" />
-            </Stack>
-          </SafeAreaView>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
-    </CartProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  animation: "slide_from_right",
+                  animationDuration: 50,
+                  animationTypeForReplace: "push",
+                  gestureEnabled: true,
+                  lazy: false,
+                }}
+              >
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+            </SafeAreaView>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </CartProvider>
+    </QueryClientProvider>
   );
 }
 

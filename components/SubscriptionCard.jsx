@@ -7,6 +7,8 @@ import { useRouter } from "expo-router";
 import CustomPressable from "./UI/CustomPressable";
 
 export default function SubscriptionCard({ item }) {
+  console.log("item",item);
+  
   const router = useRouter();
   const placeholderImage = require("../assets/lblplaceholder.jpg");
 

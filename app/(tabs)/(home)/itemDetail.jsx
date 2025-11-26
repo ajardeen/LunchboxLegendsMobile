@@ -15,13 +15,18 @@ import { bundleData } from "../../../services/data";
 import CategoryIcon from "../../../components/CategoryIcon";
 import { useCart } from "../../../context/CartContext";
 // --- Import the new component ---
-import AddOnSelector from "../../../components/AddOnSelector"; 
+import AddOnSelector from "../../../components/AddOnSelector";
 import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
+import { useBundles } from "../../../hooks/Home/useBundles";
 
 // Utility function (kept here for consistency)
-const getAddOnItemId = (bundleId, dayName) => `addon_bundle_${bundleId}_${dayName}`;
+const getAddOnItemId = (bundleId, dayName) =>
+  `addon_bundle_${bundleId}_${dayName}`;
 
 export default function ItemDetail() {
+  const { data, isLoading } = useBundles();
+  console.log("data in items details", data);
+
   const bottomSheetRef = useRef(null);
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -33,10 +38,7 @@ export default function ItemDetail() {
   const { bundleId } = params;
   const { addToCart, cartItems } = useCart();
 
-  const item = useMemo(
-    () => bundleData.bundles.find((b) => b.id === bundleId),
-    [bundleId]
-  );
+  const item = useMemo(() => data.find((b) => b.id === bundleId), [bundleId]);
 
   if (!item) {
     return (
@@ -56,14 +58,14 @@ export default function ItemDetail() {
 
     setTimeout(() => {
       // Add the main bundle to the cart
-      addToCart(item); 
+      addToCart(item);
       setIsAdding(false);
       // Open the add-on sheet automatically after adding the bundle
-      bottomSheetRef.current?.open(); 
+      bottomSheetRef.current?.open();
     }, 800);
   };
 
-  const handleFavirid = () => {
+  const handleFavorite = () => {
     const newState = !isFavorite;
     setIsFavorite(newState);
     console.log(
@@ -73,8 +75,8 @@ export default function ItemDetail() {
 
   const handleAddonSheetOpen = () => {
     if (!itemInCart) {
-        alert("Please add the main bundle to the cart first.");
-        return;
+      alert("Please add the main bundle to the cart first.");
+      return;
     }
     bottomSheetRef.current?.open();
   };
@@ -85,7 +87,7 @@ export default function ItemDetail() {
       // RENDER: View in Cart Button (Outline style)
       <CustomPressable
         onPress={() => router.push("(tabs)/(myCart)")}
-        style={[styles.actionButton, styles.viewInCartBtn]} 
+        style={[styles.actionButton, styles.viewInCartBtn]}
       >
         <Text style={[styles.subscribeText, styles.viewInCartText]}>
           VIEW IN CART
@@ -95,7 +97,7 @@ export default function ItemDetail() {
       // RENDER: Add to Cart Button (Solid style with spinner)
       <CustomPressable
         onPress={handleAddToCart}
-        style={[styles.actionButton, isAdding && styles.addToCardBtnDisabled]} 
+        style={[styles.actionButton, isAdding && styles.addToCardBtnDisabled]}
         disabled={isAdding}
       >
         {isAdding ? (
@@ -109,7 +111,7 @@ export default function ItemDetail() {
     return (
       <View style={styles.footerButtonWrapper}>
         <CustomPressable
-          onPress={handleFavirid}
+          onPress={handleFavorite}
           style={styles.favoriteFooterButton}
         >
           <Ionicons
@@ -119,9 +121,7 @@ export default function ItemDetail() {
           />
         </CustomPressable>
 
-        <View style={{ flex: 1 }}>
-          {button}
-        </View>
+        <View style={{ flex: 1 }}>{button}</View>
       </View>
     );
   };
@@ -166,59 +166,58 @@ export default function ItemDetail() {
 
         {/* --- COMMON ADD-ON BUTTON --- */}
         {itemInCart && (
-             <View style={styles.commonAddOnWrapper}>
-                <Text style={styles.commonAddOnText}>
-                    Enhance your order:
-                </Text>
-                <CustomPressable 
-                    onPress={handleAddonSheetOpen} 
-                    style={styles.commonAddonButton}
-                >
-                    <Text style={styles.commonAddonButtonText}>
-                        + Add Extras
-                    </Text>
-                </CustomPressable>
-             </View>
+          <View style={styles.commonAddOnWrapper}>
+            <Text style={styles.commonAddOnText}>Enhance your order:</Text>
+            <CustomPressable
+              onPress={handleAddonSheetOpen}
+              style={styles.commonAddonButton}
+            >
+              <Text style={styles.commonAddonButtonText}>+ Add Extras</Text>
+            </CustomPressable>
+          </View>
         )}
         {/* --------------------------- */}
 
         {item.days.map((dayObj, index) => {
-            const addOnId = getAddOnItemId(item.id, dayObj.day);
-            const appliedAddOnBundle = cartItems.find(cartItem => cartItem.id === addOnId);
-            const totalAddOnPrice = appliedAddOnBundle?.price || 0;
-            const totalAddOnItems = appliedAddOnBundle?.products?.length || 0;
+          const addOnId = getAddOnItemId(item.id, dayObj.day);
+          const appliedAddOnBundle = cartItems.find(
+            (cartItem) => cartItem.id === addOnId
+          );
+          const totalAddOnPrice = appliedAddOnBundle?.price || 0;
+          const totalAddOnItems = appliedAddOnBundle?.products?.length || 0;
 
-            return (
-                <CustomPressable
-                  key={index}
-                  style={styles.dayCard}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/dayMenuList",
-                      params: { bundleId: item.id, day: dayObj.day },
-                    })
-                  }
-                >
-                  <View style={styles.dayCardLeft}>
-                    <View>
-                      <Text style={styles.dayCardDayText}>{dayObj.day}</Text>
-                      <Text style={styles.dayCardMenuName}>{dayObj.menuName}</Text>
-                      {totalAddOnItems > 0 && (
-                          <Text style={styles.addOnSummary}>
-                              + {totalAddOnItems} Extra Item(s) Added (₹{totalAddOnPrice})
-                          </Text>
-                      )}
-                    </View>
-                  </View>
-                  <View style={styles.dayCardRight}>
-                    <View style={styles.dayCardChevron}>
-                      <Text style={styles.dayCardNutrition}>
-                        {dayObj.totalNutrition.calories} Cal
-                      </Text>
-                    </View>
-                  </View>
-                </CustomPressable>
-            );
+          return (
+            <CustomPressable
+              key={index}
+              style={styles.dayCard}
+              onPress={() =>
+                router.push({
+                  pathname: "/dayMenuList",
+                  params: { bundleId: item.id, day: dayObj.day },
+                })
+              }
+            >
+              <View style={styles.dayCardLeft}>
+                <View>
+                  <Text style={styles.dayCardDayText}>{dayObj.day}</Text>
+                  <Text style={styles.dayCardMenuName}>{dayObj.menuName}</Text>
+                  {totalAddOnItems > 0 && (
+                    <Text style={styles.addOnSummary}>
+                      + {totalAddOnItems} Extra Item(s) Added (₹
+                      {totalAddOnPrice})
+                    </Text>
+                  )}
+                </View>
+              </View>
+              <View style={styles.dayCardRight}>
+                <View style={styles.dayCardChevron}>
+                  <Text style={styles.dayCardNutrition}>
+                    {dayObj.totalNutrition.calories} Cal
+                  </Text>
+                </View>
+              </View>
+            </CustomPressable>
+          );
         })}
       </ScrollView>
 
@@ -231,15 +230,15 @@ export default function ItemDetail() {
         ref={bottomSheetRef}
         title={bottomSheetTitle}
         snapPoints={["35%", "60%"]}
-        initialIndex={-1} 
+        initialIndex={-1}
       >
         {/* --- Pass Props to the new component --- */}
-        <AddOnSelector 
-            itemDays={item.days}
-            bundleId={item.id}
-            cartItems={cartItems}
-            addToCart={addToCart}
-            onClose={() => bottomSheetRef.current?.close()} // Pass close function
+        <AddOnSelector
+          itemDays={item.days}
+          bundleId={item.id}
+          cartItems={cartItems}
+          addToCart={addToCart}
+          onClose={() => bottomSheetRef.current?.close()} // Pass close function
         />
         {/* -------------------------------------- */}
       </CustomBottomSheet>
@@ -310,7 +309,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 15,
     paddingTop: 10,
-    marginBottom: 100, 
+    marginBottom: 100,
   },
   menuHeader: {
     marginBottom: 5,
@@ -366,8 +365,8 @@ const styles = StyleSheet.create({
   },
   addOnSummary: {
     fontSize: 14,
-    color: '#004346',
-    fontWeight: 'bold',
+    color: "#004346",
+    fontWeight: "bold",
     marginTop: 5,
   },
   // --- Main Footer Button Styles ---
@@ -406,7 +405,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
     backgroundColor: "#1E1E1E",
     justifyContent: "center",
-    minWidth:"90%",
+    minWidth: "90%",
     minHeight: 60,
   },
   addToCardBtnDisabled: {
@@ -427,29 +426,29 @@ const styles = StyleSheet.create({
   },
   // --- COMMON ADD-ONS BUTTON STYLES (Kept here as it's part of ItemDetail UI) ---
   commonAddOnWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingBottom: 15,
     paddingHorizontal: 5,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: "#E5E7EB",
     marginBottom: 10,
   },
   commonAddOnText: {
     fontSize: 16,
-    color: '#374151',
-    fontWeight: '500',
+    color: "#374151",
+    fontWeight: "500",
   },
   commonAddonButton: {
-    backgroundColor: '#004346',
+    backgroundColor: "#004346",
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 8,
   },
   commonAddonButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

@@ -6,35 +6,47 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AdBanner from "../../../components/AdBanner";
 import SubscriptionCard from "../../../components/SubscriptionCard";
 import { bundleData } from "../../../services/data";
 import { RefreshControl } from "react-native-gesture-handler";
+import { useBundles } from "../../../hooks/Home/useBundles";
 
 export default function Home() {
-  const [data, setData] = useState(bundleData);
+  const {
+    data: bundleDataApi,
+    isLoading: isBundleLoading,
+    isError: isBundleError,
+    refetch,
+  } = useBundles();
+  
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    if (bundleDataApi) {
+      setData(bundleDataApi); 
+    }
+    console.log("bundleDataApi",data);
+    
+  }, [bundleDataApi]);
   const [refreshing, setRefreshing] = useState(false);
   const [active, setActive] = useState("ALL");
   const tabs = ["ALL", "Veg", "Non Veg"];
   const name = "Lunchbox Legends";
   const location = "Tecci Park";
 
-  const filteredBundles = data.bundles.filter((bundle) => {
+  const filteredBundles = data.filter((bundle) => {
     if (active === "ALL") return true;
     if (active === "Veg") return bundle.category === "veg";
     if (active === "Non Veg")
       return bundle.category === "non-veg" || bundle.category === "mix";
     return false;
   });
-  const onRefresh = useCallback(() => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate re-fetch
-    setTimeout(() => {
-      console.log("refreshing");
-      setRefreshing(false);
-    }, 1500);
-  }, []);
+    await refetch(); // ← get fresh API data
+    setRefreshing(false);
+  };
   return (
     <ScrollView
       refreshControl={
