@@ -11,18 +11,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { bundleData } from "../../../services/data";
 import CategoryIcon from "../../../components/CategoryIcon";
 import { useBundles } from "../../../hooks/Home/useBundles";
+import { useBundleData } from "../../../context/BundleContext";
 
 export default function DayMenuList() {
-  const { data, isLoading } = useBundles()
+  const { getDayMenu } = useBundleData();
   const router = useRouter();
   const params = useLocalSearchParams();
   const { bundleId, day: dayName } = params;
 
-  const dayData = useMemo(() => {
-    const bundle = data.find((b) => b.id === bundleId);
-    if (!bundle) return null;
-    return bundle.days.find((d) => d.day === dayName);
-  }, [bundleId, dayName]);
+  const dayData = getDayMenu(bundleId, dayName);
 
   if (!dayData) {
     return (

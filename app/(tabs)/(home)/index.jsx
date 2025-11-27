@@ -5,30 +5,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  ActivityIndicator,
 } from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import AdBanner from "../../../components/AdBanner";
 import SubscriptionCard from "../../../components/SubscriptionCard";
-import { bundleData } from "../../../services/data";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useBundles } from "../../../hooks/Home/useBundles";
+import { useBundleData } from "../../../context/BundleContext";
 
 export default function Home() {
-  const {
-    data: bundleDataApi,
-    isLoading: isBundleLoading,
-    isError: isBundleError,
-    refetch,
-  } = useBundles();
-  
+  const { data: bundleData, isLoading, refetch } = useBundleData();
+
   const [data, setData] = useState([]);
   useEffect(() => {
-    if (bundleDataApi) {
-      setData(bundleDataApi); 
+    if (bundleData) {
+      setData(bundleData);
     }
-    console.log("bundleDataApi",data);
-    
-  }, [bundleDataApi]);
+  }, [bundleData]);
+
   const [refreshing, setRefreshing] = useState(false);
   const [active, setActive] = useState("ALL");
   const tabs = ["ALL", "Veg", "Non Veg"];
@@ -74,6 +69,7 @@ export default function Home() {
           showsHorizontalScrollIndicator={false}
           style={styles.tabsScrollView}
         >
+          
           {tabs.map((tab) => {
             const isActive = active === tab;
             return (
@@ -100,6 +96,11 @@ export default function Home() {
 
         {/* Item Cards */}
         <View style={styles.itemCardsContainer}>
+          {isLoading && (
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+              <ActivityIndicator size="large" color="#007AFF" />
+            </View>
+          )}
           {filteredBundles.map((item) => (
             <SubscriptionCard key={item.id} item={item} />
           ))}

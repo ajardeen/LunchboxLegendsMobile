@@ -18,14 +18,15 @@ import { useCart } from "../../../context/CartContext";
 import AddOnSelector from "../../../components/AddOnSelector";
 import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
 import { useBundles } from "../../../hooks/Home/useBundles";
+import { useBundleData } from "../../../context/BundleContext";
 
 // Utility function (kept here for consistency)
 const getAddOnItemId = (bundleId, dayName) =>
   `addon_bundle_${bundleId}_${dayName}`;
 
 export default function ItemDetail() {
-  const { data, isLoading } = useBundles();
-  console.log("data in items details", data);
+  const { getBundleById } = useBundleData();
+
 
   const bottomSheetRef = useRef(null);
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function ItemDetail() {
   const { bundleId } = params;
   const { addToCart, cartItems } = useCart();
 
-  const item = useMemo(() => data.find((b) => b.id === bundleId), [bundleId]);
+  const item = getBundleById(bundleId);
 
   if (!item) {
     return (
