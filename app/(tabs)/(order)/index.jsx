@@ -85,7 +85,6 @@ export default function Order() {
   }, []);
 
   const fetchOrders = useCallback(() => {
-    console.log("fetching");
     
     setIsLoading(true);
     // Simulate API fetch
@@ -99,7 +98,6 @@ export default function Order() {
     setRefreshing(true);
     // Simulate re-fetch
     setTimeout(() => {
-      console.log("refreshing");
       
       fetchOrders();
       setOrdersData(ALL_ORDERS_DATA);

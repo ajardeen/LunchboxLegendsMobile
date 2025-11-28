@@ -151,11 +151,6 @@ const AddOnSelector = ({
 
     addToCart(addOnBundleItem);
 
-    console.log("--- Add-On Bundle Added/Updated ---");
-    console.log("Day:", addOnBundleItem.day);
-    console.log("Total Price:", addOnBundleItem.price);
-    console.log("Products:", addOnBundleItem.products);
-    console.log("----------------------------------");
 
     setTimeout(() => {
       setIsApplyingAddons(false);

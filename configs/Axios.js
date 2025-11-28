@@ -2,14 +2,14 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API = axios.create({
-  baseURL: "http://10.138.6.222:3000/api",
+  baseURL: "http://10.138.6.109:3000/api",
 });
 
 API.interceptors.request.use(async (config) => {
   try {
     config.headers["Content-Type"] = "application/json";
-    config.headers["X-Organization-Id"] = "691c7d9d841d0f2ce1cd658d";
-    config.headers["X-Branch-Id"] = "691c7d9e841d0f2ce1cd658f";
+    config.headers["X-Organization-Id"] = process.env.EXPO_PUBLIC_ORGANIZATION_ID;
+    config.headers["X-Branch-Id"] = process.env.EXPO_PUBLIC_BRANCH_ID;
 
     const token = await AsyncStorage.getItem("token");
     if (token) {

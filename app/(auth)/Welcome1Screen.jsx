@@ -8,8 +8,10 @@ import {
 } from "react-native";
 import { COLORS } from "../../theme/colors";
 import { router } from "expo-router";
+import { useAuth } from "../../context/AuthContext";
 
 const Welcome1Screen = () => {
+  const { loading } = useAuth();
   return (
     <ImageBackground
       style={styles.container}
@@ -56,11 +58,15 @@ const styles = StyleSheet.create({
   nextBtn: {
     alignSelf: "flex-end",
     backgroundColor: COLORS.white,
-    padding: 14,
+    paddingBottom: 0,
     borderRadius: 50,
     margin: 24,
+    width: 85,
+    justifyContent: "center",
+    alignItems: "center",
+     height:50
   },
-  arrow: { fontSize: 28, color: COLORS.black },
+  arrow: { fontSize: 38, color: COLORS.black },
 });
 
 export default Welcome1Screen;

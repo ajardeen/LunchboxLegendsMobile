@@ -60,9 +60,9 @@ export default function DayMenuList() {
             </View>
 
             <View style={styles.itemRight}>
-              <Text style={styles.quantityText}>
-                {menuItem.quantity} {menuItem.uom}
-              </Text>
+              <Text style={styles.quantityText}>x{menuItem.quantity}</Text>
+              {/* <Text style={styles.quantityText}>{menuItem.uom}</Text> */}
+
               <CategoryIcon type={menuItem.category} size={14} />
             </View>
           </View>

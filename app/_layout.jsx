@@ -7,43 +7,44 @@ import { CartProvider } from "../context/CartContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BundleProvider } from "../context/BundleContext";
-import Welcome2Screen from "./(auth)/Welcome2Screen";
-import Welcome1Screen from "./(auth)/Welcome1Screen";
-import LoginScreen from "./(auth)/login";
-import SignupScreen from "./(auth)/signup";
+import { AuthProvider } from "../context/AuthContext";
+import { CustomerProvider } from "../context/CustomerContext";
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BundleProvider>
-        <CartProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <SafeAreaProvider>
-              <SafeAreaView style={styles.safeArea}>
-                <StatusBar style="dark" backgroundColor="#fff" />
+      <CustomerProvider>
+        <AuthProvider>
+          <BundleProvider>
+            <CartProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <SafeAreaProvider>
+                  <SafeAreaView style={styles.safeArea}>
+                    <StatusBar style="dark" backgroundColor="#fff" />
 
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    animation: "slide_from_right",
-                    animationDuration: 50,
-                    animationTypeForReplace: "push",
-                    gestureEnabled: true,
-                    lazy: false,
-                  }}
-                >
-                  <Stack.Screen name="(auth)/Welcome1Screen"  />
-                  <Stack.Screen name="(auth)/Welcome2Screen"    />
-                  <Stack.Screen name="(auth)/Login"   />
-                  <Stack.Screen name="(auth)/Signup"    />
-                  <Stack.Screen name="(tabs)" />
-                </Stack>
-              </SafeAreaView>
-            </SafeAreaProvider>
-          </GestureHandlerRootView>
-        </CartProvider>
-      </BundleProvider>
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        animation: "slide_from_right",
+                        animationDuration: 50,
+                        animationTypeForReplace: "push",
+                        gestureEnabled: true,
+                        lazy: false,
+                      }}
+                    >
+                      <Stack.Screen name="(auth)/Welcome1Screen" />
+                      <Stack.Screen name="(auth)/Welcome2Screen" />
+
+                      <Stack.Screen name="(tabs)" />
+                    </Stack>
+                  </SafeAreaView>
+                </SafeAreaProvider>
+              </GestureHandlerRootView>
+            </CartProvider>
+          </BundleProvider>
+        </AuthProvider>
+      </CustomerProvider>
     </QueryClientProvider>
   );
 }

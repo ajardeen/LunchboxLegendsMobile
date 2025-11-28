@@ -56,13 +56,23 @@ export default function ItemDetail() {
     if (isAdding) return;
 
     setIsAdding(true);
+    const cartItem = {
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      orderType:item.bundleType,
+      quantity: 1,
+    }
 
     setTimeout(() => {
+      console.log("items",item);
+      
       // Add the main bundle to the cart
-      addToCart(item);
-      setIsAdding(false);
+      addToCart(cartItem);
+      setIsAdding(false)
+      ;
       // Open the add-on sheet automatically after adding the bundle
-      bottomSheetRef.current?.open();
+      // bottomSheetRef.current?.open();
     }, 800);
   };
 

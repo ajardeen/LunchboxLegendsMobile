@@ -16,6 +16,7 @@ import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
 import AddressChangeSheet from "../../../components/AddressChangeSheet";
 import CartItemDetailSheet from "../../../components/CartItemDetailSheet";
 import { SwipeListView } from "react-native-swipe-list-view";
+import { useCreateOrder } from "../../../hooks/Order/useOrder";
 
 // --- CRITICAL: Extract actions to avoid re-renders ---
 const useCartActions = () => {
@@ -171,6 +172,7 @@ CartList.displayName = "CartList";
 
 // --- MyCart Component ---
 const MyCart = () => {
+  const createOrder = useCreateOrder();
   const addressChangeSheetRef = useRef(null);
   const viewCartItemsSheetRef = useRef(null);
 
@@ -234,22 +236,35 @@ const MyCart = () => {
     }
   }, []);
 
-  const handleCheckout = useCallback(() => {
-    try {
-      if (cartItems.length === 0) return;
-      setIsProcessing(true);
-      const orderDetails = {};
-      console.log("--- FINAL ORDER DETAILS ---", orderDetails);
-    } catch (error) {
-      console.log(error.message);
-    } finally {
-      setTimeout(() => {
-        setIsProcessing(false);
-        router.push("/paymentSuccessScreen");
-        emptyCart();
-      }, 2000);
-    }
-  }, [cartItems.length, router, emptyCart]);
+const handleCheckout = useCallback(async () => {
+  if (cartItems.length === 0) return;
+
+  setIsProcessing(true);
+
+  try {
+    const orderDetails = cartItems.map((item) => ({
+      customerId: item.customerId,
+      bundleId: item.id,             
+      bundleName: item.name,          
+      orderType: item.orderType,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+
+    console.log("--- FINAL ORDER DETAILS ---", orderDetails);
+
+    await createOrder.mutateAsync(orderDetails);
+
+    // emptyCart(); // if needed
+    router.push("/paymentSuccessScreen");
+  } catch (error) {
+    console.log("Order Create Error:", error?.message);
+  } finally {
+    setIsProcessing(false);
+  }
+}, [cartItems, router]);
+
+
 
   const handleNavigateHome = useCallback(() => {
     router.navigate("(tabs)/(home)");
@@ -299,7 +314,6 @@ const MyCart = () => {
               onViewDetails={handleViewItemDetails}
               ListFooterComponent={
                 <View style={styles.scrollableFooterContent}>
-                  
                   <Text onPress={handleNavigateHome} style={styles.addMore}>
                     + Add more items
                   </Text>
@@ -414,7 +428,7 @@ const MyCart = () => {
       <CustomBottomSheet
         ref={addressChangeSheetRef}
         title="Change Delivery Address"
-        snapPoints={["35%","60%"]}
+        snapPoints={["35%", "60%"]}
         initialIndex={-1}
       >
         <AddressChangeSheet

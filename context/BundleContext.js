@@ -6,7 +6,6 @@ const BundleContext = createContext();
 
 export const BundleProvider = ({ children }) => {
   const { data, isLoading, isError, refetch } = useBundles(); // 🔥 fetch once
-  console.log("data",data);
   
 
   // Helper: find bundle by ID
