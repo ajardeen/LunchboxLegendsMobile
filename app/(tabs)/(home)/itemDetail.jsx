@@ -65,12 +65,12 @@ export default function ItemDetail() {
     }
 
     setTimeout(() => {
-      console.log("items",item);
+      // console.log("items",item);
+      console.log("cartItem",cartItem);
       
       // Add the main bundle to the cart
       addToCart(cartItem);
-      setIsAdding(false)
-      ;
+      setIsAdding(false);
       // Open the add-on sheet automatically after adding the bundle
       // bottomSheetRef.current?.open();
     }, 800);

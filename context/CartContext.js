@@ -14,10 +14,14 @@ import { useCustomer } from "./CustomerContext";
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const { customer, loading } = useCustomer();
-  console.log("customer",customer);
-
-
+  const { customer, isLoading } = useCustomer();
+  const [customerData, setCustomerData] = useState(null);
+  console.log("customer", customer);
+  useEffect(() => {
+    if (customer) {
+      setCustomerData(customer);
+    }
+  }, [isLoading, customer]);
 
   const [cartItems, setCartItems] = useState([]);
 
@@ -48,7 +52,7 @@ export const CartProvider = ({ children }) => {
         return [
           ...prevItems,
           {
-            customerId: customer._id,
+            customerId: customerData._id,
             id: bundle.id,
             name: bundle.name,
             orderType: bundle.bundleType,
