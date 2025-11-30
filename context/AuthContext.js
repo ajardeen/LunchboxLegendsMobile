@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { useCustomer } from "./CustomerContext";
 
 const AuthContext = createContext();
 export const useAuth = () => useContext(AuthContext);
@@ -8,19 +9,28 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [userToken, setUserToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { setCustomer } = useCustomer();
 
-  // Check login session on app open
+  // Load session on startup
   useEffect(() => {
-    const loadToken = async () => {
-      const token = await AsyncStorage.getItem("token");
+    const loadSession = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const storedCustomer = await AsyncStorage.getItem("customer");
 
-      if (token) {
-        setUserToken(token);
-        router.replace("/(tabs)/(home)"); // already logged in → go home
+        if (token) {
+          setUserToken(token);
+          if (storedCustomer) {
+            setCustomer(JSON.parse(storedCustomer)); // 🔥 restore customer state
+          }
+          router.replace("/(tabs)/(home)");
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
-    loadToken();
+
+    loadSession();
   }, []);
 
   /** LOGIN */
@@ -28,6 +38,7 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.setItem("token", token);
     await AsyncStorage.setItem("customer", JSON.stringify(customer));
     setUserToken(token);
+    setCustomer(customer);
     router.replace("/(tabs)/(home)");
   };
 
@@ -36,7 +47,8 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("customer");
     setUserToken(null);
-    router.replace("/(auth)/Welcome2Screen"); // go to login/signup
+    setCustomer(null);
+    router.replace("/(auth)/Welcome2Screen");
   };
 
   return (

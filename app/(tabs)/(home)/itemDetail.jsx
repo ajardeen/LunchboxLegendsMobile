@@ -176,7 +176,7 @@ export default function ItemDetail() {
         </View>
 
         {/* --- COMMON ADD-ON BUTTON --- */}
-        {itemInCart && (
+        {/* {itemInCart && (
           <View style={styles.commonAddOnWrapper}>
             <Text style={styles.commonAddOnText}>Enhance your order:</Text>
             <CustomPressable
@@ -186,7 +186,7 @@ export default function ItemDetail() {
               <Text style={styles.commonAddonButtonText}>+ Add Extras</Text>
             </CustomPressable>
           </View>
-        )}
+        )} */}
         {/* --------------------------- */}
 
         {item.days.map((dayObj, index) => {
@@ -210,8 +210,8 @@ export default function ItemDetail() {
             >
               <View style={styles.dayCardLeft}>
                 <View>
-                  <Text style={styles.dayCardDayText}>{dayObj.day}</Text>
                   <Text style={styles.dayCardMenuName}>{dayObj.menuName}</Text>
+                  <Text style={styles.dayCardDayText}>{dayObj.day}</Text>
                   {totalAddOnItems > 0 && (
                     <Text style={styles.addOnSummary}>
                       + {totalAddOnItems} Extra Item(s) Added (₹
@@ -348,9 +348,10 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   dayCardDayText: {
-    fontSize: 18,
+    fontSize: 12,
     fontWeight: "bold",
-    color: "#111827",
+    color: "#525354ff",
+    letterSpacing:1,
     textTransform: "capitalize",
   },
   dayCardMenuName: {

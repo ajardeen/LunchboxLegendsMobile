@@ -11,11 +11,8 @@ export const createOrder = async (payload) => {
   const { data } = await API.post(endpoint, payload);
   return data;
 };
-// export const updateOrder = async ({ id, payload }) => {
-//   const { data } = await API.put(`${endpoint}/${id}`, payload);
-//   return data;
-// };
-// export const deleteOrder = async (id) => {
-//   const { data } = await API.delete(`${endpoint}/${id}`);
-//   return data;
-// };
+
+export const fetchCustomerOrders = async (customerId) => {
+  const { data } = await API.get(`${endpoint}/customer/${customerId}`);
+  return data;
+};

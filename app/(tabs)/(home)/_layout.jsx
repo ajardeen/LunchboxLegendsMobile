@@ -13,8 +13,18 @@ const _layout = () => {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="itemDetail" />
-      <Stack.Screen name="dayMenuList" />
+      <Stack.Screen
+        name="itemDetail"
+        options={{
+          tabBarStyle: { display: "none" }, // hide tabs
+        }}
+      />
+      <Stack.Screen
+        name="dayMenuList"
+        options={{
+          tabBarStyle: { display: "none" }, // hide tabs
+        }}
+       />
     </Stack>
   );
 };

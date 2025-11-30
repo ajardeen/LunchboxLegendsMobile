@@ -14,6 +14,8 @@ import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
 export default function orderTracker() {
   const { orderData } = useLocalSearchParams();
   const order = JSON.parse(orderData);
+  console.log("order parse",order);
+  
 
   const bottomSheetRef = useRef(null);
   const [rating, setRating] = useState(0);
@@ -49,46 +51,46 @@ export default function orderTracker() {
 
         {/* Order Status Timeline */}
         <View style={styles.timeline}>
-          {order.orderSteps.map((step, index) => (
-            <View key={step.id} style={styles.stepRow}>
-              <View style={styles.stepLeft}>
-                <View style={styles.iconColumn}>
-                  <View
-                    style={[
-                      styles.stepCircle,
-                      step.completed && styles.stepCircleCompleted,
-                    ]}
-                  >
-                    {step.completed && (
-                      <Ionicons name="checkmark" size={12} color="#fff" />
-                    )}
-                  </View>
-                  {index < order.orderSteps.length - 1 && (
+            {order.orderSteps.map((step, index) => (
+              <View key={step.id} style={styles.stepRow}>
+                <View style={styles.stepLeft}>
+                  <View style={styles.iconColumn}>
                     <View
                       style={[
-                        styles.stepLine,
-                        step.completed && styles.stepLineActive,
+                        styles.stepCircle,
+                        step.completed && styles.stepCircleCompleted,
                       ]}
-                    />
-                  )}
+                    >
+                      {step.completed && (
+                        <Ionicons name="checkmark" size={12} color="#fff" />
+                      )}
+                    </View>
+                    {index < order.orderSteps.length - 1 && (
+                      <View
+                        style={[
+                          styles.stepLine,
+                          step.completed && styles.stepLineActive,
+                        ]}
+                      />
+                    )}
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.stepContent}>
-                <Text
-                  style={[
-                    styles.stepTitle,
-                    step.completed && { color: "#16A34A" },
-                  ]}
-                >
-                  {step.title}
-                </Text>
-                <Text style={styles.stepSubtitle}>{step.subtitle}</Text>
-              </View>
+                <View style={styles.stepContent}>
+                  <Text
+                    style={[
+                      styles.stepTitle,
+                      step.completed && { color: "#16A34A" },
+                    ]}
+                  >
+                    {step.title}
+                  </Text>
+                  <Text style={styles.stepSubtitle}>{step.subtitle}</Text>
+                </View>
 
-              <Text style={styles.stepTime}>{step.time}</Text>
-            </View>
-          ))}
+                <Text style={styles.stepTime}>{step.time}</Text>
+              </View>
+            ))}
         </View>
 
         {/* Delivery Address Card */}

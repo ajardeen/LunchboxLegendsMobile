@@ -15,13 +15,8 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const { customer, isLoading } = useCustomer();
-  const [customerData, setCustomerData] = useState(null);
   console.log("customer", customer);
-  useEffect(() => {
-    if (customer) {
-      setCustomerData(customer);
-    }
-  }, [isLoading, customer]);
+
 
   const [cartItems, setCartItems] = useState([]);
 
@@ -36,6 +31,7 @@ export const CartProvider = ({ children }) => {
 
   // 1. Add or Increment Item
   const addToCart = useCallback((bundle) => {
+      if (!customer) return; // prevents error when null during initial load
     setCartItems((prevItems) => {
       const existingItemIndex = prevItems.findIndex(
         (item) => item.id === bundle.id
@@ -52,7 +48,7 @@ export const CartProvider = ({ children }) => {
         return [
           ...prevItems,
           {
-            customerId: customerData._id,
+            customerId: customer._id,
             id: bundle.id,
             name: bundle.name,
             orderType: bundle.bundleType,
@@ -62,7 +58,7 @@ export const CartProvider = ({ children }) => {
         ];
       }
     });
-  }, []); // Empty dependency array - function never changes
+  }, [customer]); // Empty dependency array - function never changes
 
   // 2. Increment/Decrement Quantity - OPTIMIZED
   const updateQuantity = useCallback((id, type) => {
