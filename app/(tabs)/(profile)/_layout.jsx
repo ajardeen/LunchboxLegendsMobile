@@ -18,6 +18,7 @@ const _layout = () => {
       <Stack.Screen name="orderHistory" options={{title:"Order History",headerShown:true}} />
       <Stack.Screen name="favorites" options={{title:"Favorites",headerShown:true}} />
       <Stack.Screen name="mySubscription" options={{title:"My Subscription",headerShown:true}} />
+      <Stack.Screen name="manageSubscription" options={{title:"Manage Subscription",headerShown:true}} />
       <Stack.Screen name="referFriend" options={{title:"",headerShown:true}} />
       <Stack.Screen name="help" options={{title:"",headerShown:true}} />
     </Stack>

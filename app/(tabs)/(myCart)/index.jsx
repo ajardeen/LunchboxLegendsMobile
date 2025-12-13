@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useMemo, memo } from "react";
+import { useState, useRef, useCallback, useMemo, memo, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -17,6 +17,8 @@ import AddressChangeSheet from "../../../components/AddressChangeSheet";
 import CartItemDetailSheet from "../../../components/CartItemDetailSheet";
 import { SwipeListView } from "react-native-swipe-list-view";
 import { useCreateOrder } from "../../../hooks/Order/useOrder";
+import { useCustomerById } from "../../../hooks/Profile/useCustomerHook";
+import { useCustomer } from "../../../context/CustomerContext";
 
 // --- CRITICAL: Extract actions to avoid re-renders ---
 const useCartActions = () => {
@@ -172,6 +174,24 @@ CartList.displayName = "CartList";
 
 // --- MyCart Component ---
 const MyCart = () => {
+  const { customerId } = useCustomer();
+  const {
+    data: customerData,
+    isLoading: customerIsLoading,
+    isError: customerIsError,
+  } = useCustomerById(customerId);
+  const [customerDeliveryAddress, setCustomerDeliveryAddress] = useState(null);
+
+  useEffect(() => {
+    if (customerData?.customer?.deliveryAddress) {
+      setCustomerDeliveryAddress(customerData.customer.deliveryAddress);
+      const defaultAddr = customerData.customer.deliveryAddress.find(
+        (a) => a.isDefault
+      );
+      if (defaultAddr) setSelectedAddress(defaultAddr._id);
+    }
+  }, [customerData]);
+
   const createOrder = useCreateOrder();
   const addressChangeSheetRef = useRef(null);
   const viewCartItemsSheetRef = useRef(null);
@@ -194,28 +214,29 @@ const MyCart = () => {
 
   const total = subtotal + taxes + delivery;
 
-  const addresses = useMemo(
-    () => [
-      {
-        id: "home",
-        title: "Home",
-        phone: "+91 888 888 8888",
-        address: "Gaur City 1 Club",
-      },
-      {
-        id: "office",
-        title: "Office",
-        phone: "(0261) 555-0115",
-        address: "2588 Ratan lal sahdev marg",
-      },
-    ],
-    []
-  );
+  const currentAddress = useMemo(() => {
+    if (!customerDeliveryAddress || customerDeliveryAddress.length === 0)
+      return null;
 
-  const currentAddress = useMemo(
-    () => addresses.find((addr) => addr.id === selectedAddress),
-    [addresses, selectedAddress]
-  );
+    const found = customerDeliveryAddress.find(
+      (addr) => addr._id === selectedAddress
+    );
+    return found || null;
+  }, [customerDeliveryAddress, selectedAddress]);
+
+  useEffect(() => {
+    if (!customerDeliveryAddress || customerDeliveryAddress.length === 0)
+      return;
+
+    const found = customerDeliveryAddress.find(
+      (addr) => addr._id === selectedAddress
+    );
+
+    if (!found) {
+      alert("No delivery address selected. Please add one.");
+      router.push("/addressScreen"); // navigate to create address
+    }
+  }, [customerDeliveryAddress, selectedAddress]);
 
   const paymentOptions = useMemo(
     () => [
@@ -236,35 +257,35 @@ const MyCart = () => {
     }
   }, []);
 
-const handleCheckout = useCallback(async () => {
-  if (cartItems.length === 0) return;
+  const handleCheckout = useCallback(async () => {
+    if (cartItems.length === 0) return;
 
-  setIsProcessing(true);
+    setIsProcessing(true);
 
-  try {
-    const orderDetails = cartItems.map((item) => ({
-      customerId: item.customerId,
-      bundleId: item.id,             
-      bundleName: item.name,          
-      orderType: item.orderType,
-      price: item.price,
-      quantity: item.quantity,
-    }));
+    try {
+      const orderDetails = cartItems.map((item) => ({
+        customerId: item.customerId,
+        bundleId: item.id,
+        bundleName: item.name,
+        orderType: item.orderType,
+        price: item.price,
+        quantity: item.quantity,
+        deliveryAddressId: selectedAddress,
+        paymentMethod: paymentMethod,
+      }));
 
-    console.log("--- FINAL ORDER DETAILS ---", orderDetails);
+      console.log("--- FINAL ORDER DETAILS ---", orderDetails);
 
-    await createOrder.mutateAsync(orderDetails);
+      await createOrder.mutateAsync(orderDetails);
 
-    // emptyCart(); // if needed
-    router.push("/paymentSuccessScreen");
-  } catch (error) {
-    console.log("Order Create Error:", error?.message);
-  } finally {
-    setIsProcessing(false);
-  }
-}, [cartItems, router]);
-
-
+      // emptyCart(); // if needed
+      router.push("/paymentSuccessScreen");
+    } catch (error) {
+      console.log("Order Create Error:", error?.message);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [cartItems, router]);
 
   const handleNavigateHome = useCallback(() => {
     router.navigate("(tabs)/(home)");
@@ -432,11 +453,12 @@ const handleCheckout = useCallback(async () => {
         initialIndex={-1}
       >
         <AddressChangeSheet
-          addresses={addresses}
+          addresses={customerDeliveryAddress || []}
           selectedAddressId={selectedAddress}
           onSelectAddress={handleSelectAddress}
           onClose={handleCloseAddressSheet}
           router={router}
+          loading={customerIsLoading}
         />
       </CustomBottomSheet>
       <CustomBottomSheet
@@ -462,16 +484,26 @@ const DeliveryBlock = memo(({ currentAddress, onOpenAddressSheet }) => (
         color={styles.primaryColor.color}
       />
       <View style={deliveryStyles.textBlock}>
-        <Text style={deliveryStyles.titleText}>
-          Deliver at : {currentAddress.title}
-        </Text>
-        <Text style={deliveryStyles.subtitleText}>
-          {currentAddress.address}
-        </Text>
+        {currentAddress ? (
+          <>
+            <Text style={deliveryStyles.titleText}>
+              Deliver at : {currentAddress.label}
+            </Text>
+            <Text style={deliveryStyles.subtitleText}>
+              {currentAddress.street1}, {currentAddress.city}
+            </Text>
+          </>
+        ) : (
+          <Text style={deliveryStyles.subtitleText}>
+            No delivery address selected
+          </Text>
+        )}
       </View>
     </View>
     <Pressable onPress={onOpenAddressSheet}>
-      <Text style={deliveryStyles.changeText}>CHANGE</Text>
+      <Text style={deliveryStyles.changeText}>
+        {currentAddress ? "CHANGE" : "ADD"}
+      </Text>
     </Pressable>
   </View>
 ));
@@ -522,6 +554,7 @@ const deliveryStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#000",
+    textTransform: "uppercase",
   },
   subtitleText: {
     fontSize: 14,

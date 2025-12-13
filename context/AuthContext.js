@@ -23,7 +23,8 @@ export const AuthProvider = ({ children }) => {
           if (storedCustomer) {
             setCustomer(JSON.parse(storedCustomer)); // 🔥 restore customer state
           }
-          router.replace("/(tabs)/(home)");
+          // added directly in index 
+          // router.replace("/(tabs)/(home)");
         }
       } finally {
         setLoading(false);

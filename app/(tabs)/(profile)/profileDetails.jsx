@@ -4,12 +4,14 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCustomer } from "../../../context/CustomerContext";
+import { useCustomerById } from "../../../hooks/Profile/useCustomerHook";
 
 // Reusable Component for simple fields
 const ProfileField = ({ label, value }) => (
@@ -20,53 +22,116 @@ const ProfileField = ({ label, value }) => (
 );
 
 // Address Component
-const DeliveryAddress = ({ address, router }) => (
+const DeliveryAddress = ({ isDefault = false, address, router }) => (
   <View style={styles.fieldContainer}>
-    <Text style={[styles.label, { marginBottom: 10 }]}>Delivery Address</Text>
-
     {address ? (
       <View style={styles.addressDisplayBox}>
         <View style={styles.addressInfo}>
-          <Text style={styles.addressLabel}>{address.label || "Address"}</Text>
-          <Text style={styles.addressText}>{address.address}</Text>
+          <Text style={styles.addressLabel}>
+            {address.label || "Address"}{" "}
+            <Text style={styles.isDefaultStyle}>
+              {isDefault && "(Default)"}
+            </Text>{" "}
+          </Text>
+          <Text style={styles.addressText}>
+            {address.street1}+{address.street2}
+          </Text>
+          <Text style={styles.addressText}>
+            {address.city}, {address.state} {address.pinCode}
+          </Text>
+          <Text style={styles.addressText}>{address.country}</Text>
         </View>
         <TouchableOpacity
           style={styles.addAddressButton}
-          onPress={() => router.navigate("addressScreen")}
+          onPress={() =>
+            router.navigate({
+              pathname: "addressScreen",
+              params: { mode: "edit", addressId: address._id },
+            })
+          }
         >
           <MaterialIcons name="edit" size={20} color="#004346" />
-          <Text style={styles.addAddressText}>Manage</Text>
+          <Text style={styles.manageAddressText}>Manage</Text>
         </TouchableOpacity>
       </View>
     ) : (
-      <TouchableOpacity
-        style={styles.noAddressBox}
-        onPress={() => router.navigate("addressScreen")}
-      >
-        <MaterialIcons name="add-location-alt" size={20} color="#004346" />
-        <Text style={styles.addAddressText}>Add Delivery Address</Text>
-      </TouchableOpacity>
+      <></>
     )}
   </View>
 );
 
 const ProfileDetails = () => {
   const router = useRouter();
-  const { customer, loading } = useCustomer();
+  const { customerId, loading } = useCustomer();
+  const {
+    data: customerData,
+    isLoading: isCustomerDataLoading,
+    refetch,
+  } = useCustomerById(customerId);
 
-  if (loading) return null;
+  const [refreshing, setRefreshing] = useState(false);
+
+  const customer = customerData?.customer;
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    refetch();
+    setTimeout(() => setRefreshing(false), 500);
+  }, [refetch]);
+
+  // ❗ ALL HOOKS ABOVE THIS POINT ONLY
+
+  if (loading || isCustomerDataLoading) return null;
   if (!customer) return null;
 
+  const defaultAddress = customer.deliveryAddress?.find((a) => a.isDefault);
+  const savedAddresses = customer.deliveryAddress?.filter((a) => !a.isDefault);
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#007AFF"]}
+        />
+      }
+      style={styles.container}
+    >
       <View style={styles.profileCard}>
         <ProfileField label="Full Name" value={customer.fullName} />
         <ProfileField label="Email" value={customer.email} />
         <ProfileField label="Phone Number" value={customer.phone} />
-        <DeliveryAddress
-          router={router}
-          address={customer.deliveryAddress?.[0]}
-        />
+
+        <Text style={[styles.label, { marginBottom: 10 }]}>
+          Delivery Address
+        </Text>
+        <DeliveryAddress router={router} address={defaultAddress} isDefault />
+
+        <Text style={[styles.label, { marginBottom: 10 }]}>Saved Address</Text>
+        {savedAddresses?.length > 0 &&
+          savedAddresses.map((address) => (
+            <DeliveryAddress
+              key={address._id}
+              router={router}
+              address={address}
+            />
+          ))}
+
+        <TouchableOpacity
+          style={styles.addAddressBox}
+          onPress={() =>
+            router.navigate({
+              pathname: "addressScreen",
+              params: { mode: "add" },
+            })
+          }
+        >
+          <Text style={styles.addAddressText}>
+            <MaterialIcons name="add-location-alt" size={20} color="#004346" />
+            Add Delivery Address
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -79,7 +144,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 20,
+    // padding: 20,
   },
   profileCard: {
     backgroundColor: "#F9FAFB", // Muted background
@@ -103,6 +168,11 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     fontWeight: "500",
   },
+  isDefaultStyle: {
+    color: "green",
+    fontWeight: "600",
+    fontSize: 10,
+  },
   addressDisplayBox: {
     backgroundColor: "#fff",
     borderRadius: 8,
@@ -112,6 +182,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+  addAddressBox: {
+    flex: 1,
+    gap: 1,
+  },
   addressInfo: {
     flex: 1,
   },
@@ -120,6 +194,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
     marginBottom: 4,
+    textTransform: "uppercase",
   },
   addressText: {
     fontSize: 13,
@@ -132,10 +207,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignSelf: "center",
   },
-  addAddressText: {
+  manageAddressText: {
     color: "#004346", // Theme color
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 5,
+  },
+  addAddressText: {
+    color: "#004346", // Theme color
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderRadius: 8,
+    borderColor: "#E5E7EB",
+    padding: 10,
+  },
+  radioContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });

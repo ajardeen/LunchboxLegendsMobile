@@ -8,9 +8,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { bundleData } from "../../../services/data";
 import CategoryIcon from "../../../components/CategoryIcon";
-import { useBundles } from "../../../hooks/Home/useBundles";
 import { useBundleData } from "../../../context/BundleContext";
 
 export default function DayMenuList() {

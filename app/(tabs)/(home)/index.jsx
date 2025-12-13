@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 import AdBanner from "../../../components/AdBanner";
 import SubscriptionCard from "../../../components/SubscriptionCard";
 import { RefreshControl } from "react-native-gesture-handler";
-import { useBundles } from "../../../hooks/Home/useBundles";
 import { useBundleData } from "../../../context/BundleContext";
 
 export default function Home() {
@@ -22,6 +21,9 @@ export default function Home() {
     if (bundleData) {
       setData(bundleData);
     }
+    console.log("bundleData", bundleData);
+
+    
   }, [bundleData]);
 
   const [refreshing, setRefreshing] = useState(false);

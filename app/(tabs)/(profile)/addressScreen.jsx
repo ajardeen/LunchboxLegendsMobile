@@ -7,34 +7,23 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { Pressable } from "react-native";
 import CustomPressable from "../../../components/UI/CustomPressable";
 import * as Location from "expo-location";
 import { useState, useEffect } from "react";
 import { Picker } from "@react-native-picker/picker";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-// --- Placeholder Data (same as in profileDetails) ---
-const userData = {
-  addresses: [
-    {
-      id: 1,
-      label: "Home",
-      address: "H-504, Gaur City 1, Noida, UP - 201009",
-    },
-    {
-      id: 2,
-      label: "Office",
-      address: "Tower B, Sector 62, Noida, UP - 201301",
-    },
-    {
-      id: 3,
-      label: "Other",
-      address: "Flat 302, Green Park Apartments, Delhi - 110016",
-    },
-  ],
-};
+import {
+  useCustomerById,
+  useAddAddress,
+  useEditAddress,
+  useFetchCustomerAddressById,
+} from "../../../hooks/Profile/useCustomerHook";
+import { useCustomer } from "../../../context/CustomerContext";
 
 const addressScreen = () => {
   const [location, setLocation] = useState(null);
@@ -44,6 +33,36 @@ const addressScreen = () => {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState(1);
+  const [isDefault, setIsDefault] = useState(false);
+  const { customer, customerId } = useCustomer();
+  const params = useLocalSearchParams(); // { mode, addressId }
+  const isEdit = params.mode === "edit";
+  const { data: customerEditAddress, isLoading: isCustomerEditAddressLoading } =
+    useFetchCustomerAddressById(customerId, params.addressId);
+
+  const setEditingAddress = (address) => {
+    if (address) {
+      setAddressLabel(address.label || "home");
+      setStreet(address.street1);
+      setCity(address.city);
+      setRegion(address.state);
+      setPinCode(address.pinCode);
+      setCountry(address.country);
+      setDeliveryNotes(address.deliveryNotes);
+      setIsDefault(address.isDefault);
+      setSelectedAddressId(address._id);
+    }
+  };
+
+  useEffect(() => {
+    console.log("customerEditAddress", customerEditAddress);
+    if (customerEditAddress) {
+      setEditingAddress(customerEditAddress.address);
+    }
+  }, [isCustomerEditAddressLoading]);
+
+  const addAddressMutation = useAddAddress();
+  const editAddressMutation = useEditAddress();
 
   // Form states
   const [addressLabel, setAddressLabel] = useState("home");
@@ -53,6 +72,7 @@ const addressScreen = () => {
   const [region, setRegion] = useState("");
   const [pinCode, setPinCode] = useState("");
   const [country, setCountry] = useState("");
+  const [deliveryNotes, setDeliveryNotes] = useState("");
 
   const router = useRouter();
 
@@ -157,6 +177,7 @@ const addressScreen = () => {
   };
 
   const handleSaveAddress = async () => {
+    // 1. Validate custom label
     const finalLabel = addressLabel === "custom" ? customLabel : addressLabel;
 
     if (addressLabel === "custom" && !customLabel.trim()) {
@@ -164,79 +185,98 @@ const addressScreen = () => {
       return;
     }
 
+    // You need the customer ID to make the API call
+
+    if (!customerId) {
+      Alert.alert("Error", "Customer ID is missing. Cannot save address.");
+      return;
+    }
+
     setIsLoadingSave(true);
 
-    // Simulate async save operation
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const savedAddress = {
+    // 2. Construct the Address Body (Must match backend schema)
+    const newAddressBody = {
+      // The backend will determine if this is the default based on its logic
+      // For now, we'll set it to false, or add a state if you want a checkbox.
+      isDefault: isDefault, // You might need a checkbox/toggle for this in your UI
       label: finalLabel,
-      street: street,
+      street1: street,
       city: city,
-      region: region,
+      state: region,
       pinCode: pinCode,
       country: country,
-      coordinates: location
-        ? {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          }
-        : null,
-      fullGeocodeResult: geocodeResult,
-      timestamp: new Date().toISOString(),
+      deliveryNotes: deliveryNotes,
+      latitude: location?.coords?.latitude ?? null,
+      longitude: location?.coords?.longitude ?? null,
+
+      // NOTE: fullGeocodeResult and timestamp are optional fields.
+      // I've removed fullGeocodeResult to keep the body clean unless your backend requires it.
     };
 
-    console.log("--- Saved Address ---");
-    console.log(JSON.stringify(savedAddress, null, 2));
-    console.log("--------------------");
+    try {
+      // 3. API Call using the mutation hook
+      // The useAddAddress hook is expected to take (customerId, addressBody)
+      const response = await addAddressMutation.mutateAsync({
+        customerId: customerId,
+        body: newAddressBody,
+      });
 
-    setIsLoadingSave(false);
+      console.log("Add Address Success Response:", response);
 
-    Alert.alert("Success", `Address saved as "${finalLabel}"`, [
-      { text: "OK" },
-    ]);
-
-    // Here you can add your save logic (e.g., AsyncStorage, API call, etc.)
-    // Example: await AsyncStorage.setItem(`address_${finalLabel}`, JSON.stringify(savedAddress));
+      Alert.alert("Success", "Address added successfully!", [
+        {
+          text: "OK",
+          onPress: () => router.back(), // Go back after success
+        },
+      ]);
+    } catch (error) {
+      console.error(
+        "Error adding address:",
+        error.response?.data || error.message
+      );
+      Alert.alert(
+        "Error",
+        error.response?.data?.message ||
+          "Failed to add address. Please try again."
+      );
+    } finally {
+      setIsLoadingSave(false);
+    }
   };
+  const handleUpdateAddress = async () => {
+    const finalLabel = addressLabel === "custom" ? customLabel : addressLabel;
 
-  const handleSelectAddress = (id) => {
-    setSelectedAddressId(id);
-    // In a real app, you would save this preference and update the global state.
-    console.log(`Selected address ID: ${id}. Navigating back.`);
-    // Optionally navigate back after selection
-    // router.back();
+    setIsLoadingSave(true);
+    const newAddressBody = {
+      isDefault: isDefault,
+      label: finalLabel,
+      street1: street,
+      city: city,
+      state: region,
+      pinCode: pinCode,
+      country: country,
+      deliveryNotes: deliveryNotes, // Added to the API body
+      latitude: location?.coords?.latitude ?? null,
+      longitude: location?.coords?.longitude ?? null,
+    };
+    const res = await editAddressMutation.mutateAsync({
+      customerId,
+      addressId: selectedAddressId,
+      body: newAddressBody,
+    });
+    setIsLoadingSave(false);
+    Alert.alert("Success", "Address updated successfully!", [
+      {
+        text: "OK",
+        onPress: () => router.back(),
+      },
+    ]);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         {errorMsg && <Text style={styles.errorText}>🛑 {errorMsg}</Text>}
-
-        {/* Address Selection List */}
-        <View style={styles.selectionContainer}>
-          <Text style={styles.formTitle}>Select Delivery Address</Text>
-          {userData.addresses.map((addr) => {
-            const isSelected = addr.id === selectedAddressId;
-            return (
-              <Pressable
-                key={addr.id}
-                style={styles.radioContainer}
-                onPress={() => handleSelectAddress(addr.id)}
-              >
-                <View style={styles.radioCircle}>
-                  {isSelected && <View style={styles.radioSelected} />}
-                </View>
-                <View style={styles.addressInfo}>
-                  <Text style={styles.addressLabel}>{addr.label}</Text>
-                  <Text style={styles.addressText}>{addr.address}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={styles.separator} />
 
         {/* Form always visible */}
         <View style={styles.formContainer}>
@@ -332,6 +372,27 @@ const addressScreen = () => {
               placeholderTextColor="#999"
             />
           </View>
+          <TextInput
+            style={styles.input}
+            value={deliveryNotes}
+            onChangeText={setDeliveryNotes}
+            placeholder="Delivery instructions (optional)"
+          />
+          <TouchableOpacity
+            style={styles.defaultToggle}
+            onPress={() => setIsDefault(!isDefault)}
+          >
+            <View style={styles.defaultToggleContent}>
+              <MaterialCommunityIcons
+                name={isDefault ? "radiobox-marked" : "radiobox-blank"}
+                size={22}
+                color={isDefault ? "#004346" : "#666"}
+              />
+              <Text style={styles.defaultToggleText}>
+                Set as Default Address
+              </Text>
+            </View>
+          </TouchableOpacity>
           <CustomPressable
             onPress={handleLocationPermission}
             disabled={isLoadingLocation}
@@ -351,20 +412,43 @@ const addressScreen = () => {
           </CustomPressable>
 
           {/* Save Button */}
-          <CustomPressable onPress={handleSaveAddress} disabled={isLoadingSave}>
-            <View
-              style={[
-                styles.saveButton,
-                isLoadingSave && styles.buttonDisabled,
-              ]}
+          {!isEdit ? (
+            <CustomPressable
+              onPress={handleSaveAddress}
+              disabled={isLoadingSave}
             >
-              {isLoadingSave ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.buttonText}>Save Address</Text>
-              )}
-            </View>
-          </CustomPressable>
+              <View
+                style={[
+                  styles.saveButton,
+                  isLoadingSave && styles.buttonDisabled,
+                ]}
+              >
+                {isLoadingSave ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.buttonText}>Save Address</Text>
+                )}
+              </View>
+            </CustomPressable>
+          ) : (
+            <CustomPressable
+              onPress={handleUpdateAddress}
+              disabled={isLoadingSave}
+            >
+              <View
+                style={[
+                  styles.saveButton,
+                  isLoadingSave && styles.buttonDisabled,
+                ]}
+              >
+                {isLoadingSave ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.buttonText}>Update Address</Text>
+                )}
+              </View>
+            </CustomPressable>
+          )}
         </View>
       </View>
     </ScrollView>
@@ -467,7 +551,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   picker: {
-    height: 45,
+    height: 50,
     fontSize: 12,
   },
   saveButton: {
@@ -478,31 +562,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     alignItems: "center",
   },
-  // Styles for Radio Button List
-  radioContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  radioCircle: {
-    height: 22,
-    width: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: "#004346",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-    marginTop: 2,
-  },
-  radioSelected: {
-    height: 12,
-    width: 12,
-    borderRadius: 6,
-    backgroundColor: "#004346",
-  },
+
   addressInfo: {
     flex: 1,
   },
@@ -515,5 +575,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#666",
     lineHeight: 18,
+  },
+  // ⭐️ New styles for default toggle ⭐️
+  defaultToggle: {
+    paddingVertical: 10,
+    marginBottom: 10,
+  },
+  defaultToggleContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  defaultToggleText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
+    marginLeft: 8,
   },
 });

@@ -172,7 +172,7 @@ const Welcome2Screen = () => {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.centerContent}>
-          <Text style={styles.title}>Kai Suvai</Text>
+          <Text style={styles.title}>Lunchbox Legends</Text>
           <Text style={styles.subtitle}>Home food isn’t far anymore</Text>
         </View>
 
@@ -202,7 +202,7 @@ const Welcome2Screen = () => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centerContent: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { color: COLORS.white, fontSize: 40, fontWeight: "700" },
+  title: { color: COLORS.white, fontSize: 30, fontWeight: "700" },
   subtitle: { color: COLORS.white, fontSize: 16, marginTop: 6 },
   bottomButtons: { paddingHorizontal: 25, paddingBottom: 60, gap: 14 },
   darkBtn: {

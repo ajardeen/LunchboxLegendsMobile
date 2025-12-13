@@ -19,7 +19,7 @@ const Welcome1Screen = () => {
     >
       <View style={styles.textWrap}>
         <Text style={styles.heading}>Welcome to</Text>
-        <Text style={styles.brand}>Kai Suvai</Text>
+        <Text style={styles.brand}>Lunchbox Legends</Text>
         <Text style={styles.caption}>
           The real taste of home, now at your office desk!
         </Text>
@@ -50,8 +50,9 @@ const styles = StyleSheet.create({
   },
   brand: {
     color: COLORS.white,
-    fontSize: 38,
-    marginTop: -10,
+    fontSize: 18,
+    marginTop: -0,
+    marginLeft:5,
     fontFamily: "serif",
   },
   caption: { color: COLORS.white, fontSize: 16, marginTop: 10 },
