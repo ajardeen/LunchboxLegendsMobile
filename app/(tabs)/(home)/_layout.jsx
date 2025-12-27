@@ -23,8 +23,16 @@ const _layout = () => {
         name="dayMenuList"
         options={{
           tabBarStyle: { display: "none" }, // hide tabs
+          headerShown: true,
+          title: "Back",
         }}
-       />
+      />
+      <Stack.Screen
+        name="createSubscription"
+        options={{
+          tabBarStyle: { display: "none" },
+        }}
+      />
     </Stack>
   );
 };

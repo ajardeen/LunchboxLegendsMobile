@@ -1,26 +1,30 @@
 import { Redirect } from "expo-router";
-import { useAuth } from "../context/AuthContext"; 
+import { useAuth } from "../context/AuthContext";
 import { ActivityIndicator, View } from "react-native";
+import { useEffect } from "react";
 
 export default function Index() {
+  console.log("index loadded");
+  
   const { userToken, loading } = useAuth();
+  useEffect(()=>{
+    console.log("usertoken",userToken);
+    
+  },[userToken])
 
-  // 1) While auth is loading → show nothing or a loader (native splash stays visible)
+  // 1️⃣ Wait until auth state is fully restored
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" />
       </View>
     );
-    // or just: return null;
   }
 
-  // 2) After loading:
+  // 2️⃣ Auth resolved — route based on token
   if (userToken) {
-    // already logged in
     return <Redirect href="/(tabs)/(home)" />;
   }
 
-  // 3) No token → go to welcome
   return <Redirect href="/(auth)/Welcome1Screen" />;
 }

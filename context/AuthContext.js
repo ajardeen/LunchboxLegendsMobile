@@ -12,27 +12,33 @@ export const AuthProvider = ({ children }) => {
   const { setCustomer } = useCustomer();
 
   // Load session on startup
-  useEffect(() => {
-    const loadSession = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        const storedCustomer = await AsyncStorage.getItem("customer");
+ useEffect(() => {
+  let mounted = true;
 
-        if (token) {
-          setUserToken(token);
-          if (storedCustomer) {
-            setCustomer(JSON.parse(storedCustomer)); // 🔥 restore customer state
-          }
-          // added directly in index 
-          // router.replace("/(tabs)/(home)");
+  const loadSession = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const storedCustomer = await AsyncStorage.getItem("customer");
+
+      if (!mounted) return;
+
+      if (token) {
+        setUserToken(token);
+        if (storedCustomer) {
+          setCustomer(JSON.parse(storedCustomer));
         }
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (e) {
+      console.error("Failed to load session", e);
+    } finally {
+      if (mounted) setLoading(false);
+    }
+  };
 
-    loadSession();
-  }, []);
+  loadSession();
+  return () => (mounted = false);
+}, []);
+
 
   /** LOGIN */
   const login = async (token, customer) => {

@@ -1,37 +1,91 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Platform } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import dayjs from "dayjs";
 
 const PauseSheet = ({ onClose }) => {
-  const [startDate, setStartDate] = useState("Mon, 26");
-  const [endDate, setEndDate] = useState("Fri, 30");
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerType, setPickerType] = useState(null); // "start" | "end"
+
+  const onChange = (_, selectedDate) => {
+    setShowPicker(false);
+    if (!selectedDate) return;
+
+    if (pickerType === "start") {
+      setStartDate(selectedDate);
+      setEndDate(null); // reset end date if start changes
+    } else {
+      setEndDate(selectedDate);
+    }
+  };
+
+  const openPicker = (type) => {
+    setPickerType(type);
+    setShowPicker(true);
+  };
 
   return (
     <View style={styles.container}>
+      {/* Date Row */}
       <View style={styles.row}>
-        <View>
+        <Pressable onPress={() => openPicker("start")}>
           <Text style={styles.label}>Starting</Text>
-          <Text style={styles.date}>{startDate}</Text>
-        </View>
+          <Text style={styles.date}>
+            {startDate ? dayjs(startDate).format("ddd, DD MMM") : "--"}
+          </Text>
+        </Pressable>
 
-        <View>
+        <Pressable
+          onPress={() => openPicker("end")}
+          disabled={!startDate}
+        >
           <Text style={styles.label}>Ending</Text>
-          <Text style={styles.date}>{endDate}</Text>
-        </View>
+          <Text style={styles.date}>
+            {endDate ? dayjs(endDate).format("ddd, DD MMM") : "--"}
+          </Text>
+        </Pressable>
       </View>
 
-      {/* Placeholder calendar */}
-      <View style={styles.calendarPlaceholder}>
-        <Text style={styles.calendarText}>
-          Calendar UI goes here
-        </Text>
-      </View>
+      {/* Native Date Picker */}
+      {showPicker && (
+        <DateTimePicker
+          value={
+            pickerType === "start"
+              ? startDate || new Date()
+              : endDate || startDate || new Date()
+          }
+          mode="date"
+          display={Platform.OS === "ios" ? "inline" : "default"}
+          minimumDate={
+            pickerType === "start"
+              ? new Date()
+              : startDate || new Date()
+          }
+          onChange={onChange}
+        />
+      )}
 
+      {/* Footer */}
       <View style={styles.footer}>
-        <Pressable onPress={onClose}>
+        <Pressable
+          onPress={() => {
+            setStartDate(null);
+            setEndDate(null);
+          }}
+        >
           <Text style={styles.clear}>Clear</Text>
         </Pressable>
 
-        <Pressable style={styles.pauseBtn}>
+        <Pressable
+          style={[
+            styles.pauseBtn,
+            !(startDate && endDate) && { opacity: 0.5 },
+          ]}
+          disabled={!(startDate && endDate)}
+        >
           <Text style={styles.pauseText}>Pause</Text>
         </Pressable>
       </View>
@@ -40,6 +94,7 @@ const PauseSheet = ({ onClose }) => {
 };
 
 export default PauseSheet;
+
 const styles = StyleSheet.create({
   container: {
     padding: 16,
@@ -56,30 +111,20 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 16,
     fontWeight: "600",
-  },
-  calendarPlaceholder: {
-    height: 220,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  calendarText: {
-    color: "#9CA3AF",
+    marginTop: 4,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 20,
   },
   clear: {
     color: "#6B7280",
   },
   pauseBtn: {
     backgroundColor: "#22C55E",
-    paddingHorizontal: 24,
+    paddingHorizontal: 26,
     paddingVertical: 10,
     borderRadius: 20,
   },
@@ -88,3 +133,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+

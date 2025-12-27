@@ -1,72 +1,130 @@
 import { View, Text, StyleSheet, FlatList, Pressable } from "react-native";
 import React from "react";
 import { router } from "expo-router";
+import { useCustomer } from "../../../context/CustomerContext";
+import { useCustomerSubscriptions } from "../../../hooks/Order/useCustomerSubscriptions";
 
-const SUBSCRIPTIONS = [
-  {
-    id: "1",
-    kitchenName: "Kitchen 1",
-    mealType: "Breakfast",
-    balance: 300,
-    remaining: "5/15",
-    expiryDate: "15 August 2021",
-    remainingDays: 2,
-  },
-  {
-    id: "2",
-    kitchenName: "Kitchen 2",
-    mealType: "Lunch",
-    balance: 2000,
-    remaining: "20/30",
-    expiryDate: "1 September 2021",
-    remainingDays: null,
-  },
-];
 
 const mySubscription = () => {
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.kitchen}>{item.kitchenName}</Text>
-      <Text style={styles.mealType}>{item.mealType}</Text>
+  const { customerId } = useCustomer();
+  const { data = [], isLoading } = useCustomerSubscriptions(customerId);
+  console.log("sub data",data);
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Subscription balance</Text>
-        <Text style={styles.value}>₹{item.balance}</Text>
-      </View>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Tiffin remaining</Text>
-        <Text style={styles.value}>{item.remaining}</Text>
-      </View>
+  const getStatusStyles = (status) => {
+  switch (status) {
+    case "active":
+      return { text: "Active", color: "#16A34A", bg: "#DCFCE7" };
+    case "pending_approval":
+      return { text: "Pending", color: "#EA580C", bg: "#FFEDD5" };
+    case "paused":
+      return { text: "Paused", color: "#2563EB", bg: "#DBEAFE" };
+    case "completed":
+      return { text: "Completed", color: "#4B5563", bg: "#F3F4F6" };
+    case "cancelled":
+      return { text: "Cancelled", color: "#DC2626", bg: "#FEE2E2" };
+    default:
+      return { text: status, color: "#4B5563", bg: "#F3F4F6" };
+  }
+};
+  
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Expiry on</Text>
-        <View>
-          <Text style={styles.value}>{item.expiryDate}</Text>
-          {item.remainingDays && (
-            <Text style={styles.expiryWarning}>
-              {item.remainingDays} Day remaining
-            </Text>
-          )}
+  const renderItem = ({ item }) => {
+    const statusConfig = getStatusStyles(item.status);
+    // SAFE FALLBACKS
+    const deliveries = item.deliveriesUsed || "0/0";
+    const balance = item.balance ?? 0;
+    const expiryDate = item.expiryDate || "--";
+
+    // Remaining days (optional)
+    const remainingDays =
+      expiryDate !== "--"
+        ? Math.max(
+            Math.ceil(
+              (new Date(expiryDate) - new Date()) / (1000 * 60 * 60 * 24)
+            ),
+            0
+          )
+        : null;
+
+    return (
+      <View style={styles.card}>
+        <View style={styles.headerRow}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.kitchen}>{item.title || "Subscription"}</Text>
+          <Text style={styles.mealType}>{item.subtitle || "Meal Plan"}</Text>
+        </View>
+        
+        {/* Status Badge */}
+        <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
+          <Text style={[styles.statusText, { color: statusConfig.color }]}>
+            {statusConfig.text}
+          </Text>
         </View>
       </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Subscription balance</Text>
+          <Text style={styles.value}>₹{balance}</Text>
+        </View>
 
-      <View style={styles.buttonRow}>
-        <Pressable onPress={()=>router.push("/manageSubscription")} style={styles.manageBtn}>
-          <Text style={styles.manageText}>Manage</Text>
-        </Pressable>
+        <View style={styles.row}>
+          <Text style={styles.label}>Tiffin remaining</Text>
+          <Text style={styles.value}>{deliveries}</Text>
+        </View>
 
-        <Pressable style={styles.renewBtn}>
-          <Text style={styles.renewText}>Renew</Text>
-        </Pressable>
+        <View style={styles.row}>
+          <Text style={styles.label}>Expiry on</Text>
+          <View>
+            <Text style={styles.value}>{expiryDate}</Text>
+            {remainingDays !== null && remainingDays <= 3 && (
+              <Text style={styles.expiryWarning}>
+                {remainingDays} Day remaining
+              </Text>
+            )}
+          </View>
+        </View>
+
+        <View style={styles.buttonRow}>
+          <Pressable
+            onPress={() =>
+              router.push({
+                pathname: "/manageSubscription",
+                params: { subscriptionId: item.id },
+              })
+            }
+            style={styles.manageBtn}
+          >
+            <Text style={styles.manageText}>Manage</Text>
+          </Pressable>
+
+          {/* <Pressable style={styles.renewBtn}>
+            <Text style={styles.renewText}>Renew</Text>
+          </Pressable> */}
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading subscriptions...</Text>
+      </View>
+    );
+  }
+
+  if (!data.length) {
+    return (
+      <View style={styles.container}>
+        <Text>No active subscriptions</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <FlatList
-        data={SUBSCRIPTIONS}
+        data={data}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={{ paddingBottom: 20 }}
@@ -76,6 +134,7 @@ const mySubscription = () => {
 };
 
 export default mySubscription;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -154,5 +213,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#fff",
     fontWeight: "600",
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 10,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+  },
+  card: {
+    backgroundColor: "#fff", // Added for elevation contrast
+    borderWidth: 1,
+    borderColor: "#e5e5e5",
+    borderRadius: 12, // Slightly more rounded looks modern
+    padding: 16,
+    marginBottom: 16,
+    // Add minor shadow for depth
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });

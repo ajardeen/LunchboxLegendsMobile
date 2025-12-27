@@ -24,6 +24,7 @@ export default function RootLayout() {
                     <StatusBar style="dark" backgroundColor="#fff" />
 
                     <Stack
+                      initialRouteName="Index"
                       screenOptions={{
                         headerShown: false,
                         animation: "slide_from_right",
@@ -33,8 +34,8 @@ export default function RootLayout() {
                         lazy: false,
                       }}
                     >
-                      <Stack.Screen name="(auth)/Welcome1Screen" />
-                      <Stack.Screen name="(auth)/Welcome2Screen" />
+                      {/* <Stack.Screen name="(auth)/Welcome1Screen" /> */}
+                      {/* <Stack.Screen name="(auth)/Welcome2Screen" /> */}
 
                       <Stack.Screen name="(tabs)" />
                     </Stack>

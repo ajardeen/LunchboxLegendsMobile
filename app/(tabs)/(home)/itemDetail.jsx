@@ -20,13 +20,22 @@ import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
 import { useBundles } from "../../../hooks/Home/useBundles";
 import { useBundleData } from "../../../context/BundleContext";
 
+const dayNames = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
+
 // Utility function (kept here for consistency)
 const getAddOnItemId = (bundleId, dayName) =>
   `addon_bundle_${bundleId}_${dayName}`;
 
 export default function ItemDetail() {
   const { getBundleById } = useBundleData();
-
 
   const bottomSheetRef = useRef(null);
   const router = useRouter();
@@ -40,6 +49,7 @@ export default function ItemDetail() {
   const { addToCart, cartItems } = useCart();
 
   const item = getBundleById(bundleId);
+  console.log("item", item);
 
   if (!item) {
     return (
@@ -60,14 +70,14 @@ export default function ItemDetail() {
       id: item.id,
       name: item.name,
       price: item.price,
-      orderType:item.bundleType,
+      orderType: item.bundleType,
       quantity: 1,
-    }
+    };
 
     setTimeout(() => {
       // console.log("items",item);
-      console.log("cartItem",cartItem);
-      
+      console.log("cartItem", cartItem);
+
       // Add the main bundle to the cart
       addToCart(cartItem);
       setIsAdding(false);
@@ -92,6 +102,8 @@ export default function ItemDetail() {
     bottomSheetRef.current?.open();
   };
 
+
+
   // --- Conditional Footer Button Component ---
   const FooterButton = () => {
     const button = itemInCart ? (
@@ -107,21 +119,26 @@ export default function ItemDetail() {
     ) : (
       // RENDER: Add to Cart Button (Solid style with spinner)
       <CustomPressable
-        onPress={handleAddToCart}
+        onPress={() =>
+          router.push({
+            pathname: "/createSubscription",
+            params: { bundleId: item.id },
+          })
+        }
         style={[styles.actionButton, isAdding && styles.addToCardBtnDisabled]}
         disabled={isAdding}
       >
         {isAdding ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
-          <Text style={styles.subscribeText}>Add to Cart - ₹{item.price}</Text>
+          <Text style={styles.subscribeText}>Subscribe Now </Text>
         )}
       </CustomPressable>
     );
 
     return (
       <View style={styles.footerButtonWrapper}>
-        <CustomPressable
+        {/* <CustomPressable
           onPress={handleFavorite}
           style={styles.favoriteFooterButton}
         >
@@ -130,7 +147,7 @@ export default function ItemDetail() {
             size={24}
             color={isFavorite ? "red" : "#1E1E1E"}
           />
-        </CustomPressable>
+        </CustomPressable> */}
 
         <View style={{ flex: 1 }}>{button}</View>
       </View>
@@ -174,7 +191,6 @@ export default function ItemDetail() {
         <View style={styles.menuHeader}>
           <Text style={styles.menuHeaderText}>Daily Menu</Text>
         </View>
-
         {/* --- COMMON ADD-ON BUTTON --- */}
         {/* {itemInCart && (
           <View style={styles.commonAddOnWrapper}>
@@ -199,19 +215,19 @@ export default function ItemDetail() {
 
           return (
             <CustomPressable
-              key={index}
+              key={dayObj.menuId}
               style={styles.dayCard}
               onPress={() =>
                 router.push({
                   pathname: "/dayMenuList",
-                  params: { bundleId: item.id, day: dayObj.day },
+                 params: { bundleId: item.id, dayIndex: dayObj.dayIndex },
                 })
               }
             >
               <View style={styles.dayCardLeft}>
                 <View>
-                  <Text style={styles.dayCardMenuName}>{dayObj.menuName}</Text>
-                  <Text style={styles.dayCardDayText}>{dayObj.day}</Text>
+                  <Text style={styles.dayCardDayText}>{dayNames[dayObj.dayIndex]}</Text>
+                  <Text style={styles.dayCardMenuName}>Menu: {dayObj.menuName}</Text>
                   {totalAddOnItems > 0 && (
                     <Text style={styles.addOnSummary}>
                       + {totalAddOnItems} Extra Item(s) Added (₹
@@ -244,13 +260,13 @@ export default function ItemDetail() {
         initialIndex={-1}
       >
         {/* --- Pass Props to the new component --- */}
-        <AddOnSelector
+        {/* <AddOnSelector
           itemDays={item.days}
           bundleId={item.id}
           cartItems={cartItems}
           addToCart={addToCart}
           onClose={() => bottomSheetRef.current?.close()} // Pass close function
-        />
+        /> */}
         {/* -------------------------------------- */}
       </CustomBottomSheet>
     </View>
@@ -348,10 +364,10 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   dayCardDayText: {
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#525354ff",
-    letterSpacing:1,
+    letterSpacing: 0.2,
     textTransform: "capitalize",
   },
   dayCardMenuName: {

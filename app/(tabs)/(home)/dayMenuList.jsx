@@ -4,138 +4,275 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  SafeAreaView,
 } from "react-native";
-import { useLocalSearchParams, useRouter, Stack } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, Stack } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import CategoryIcon from "../../../components/CategoryIcon";
 import { useBundleData } from "../../../context/BundleContext";
 
-export default function DayMenuList() {
-  const { getDayMenu } = useBundleData();
-  const router = useRouter();
-  const params = useLocalSearchParams();
-  const { bundleId, day: dayName } = params;
+const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-  const dayData = getDayMenu(bundleId, dayName);
+export default function DayMenuList() {
+  const { getBundleById } = useBundleData();
+  const params = useLocalSearchParams();
+  const { bundleId, dayIndex } = params;
+
+  const bundle = getBundleById(bundleId);
+  const dayData = useMemo(() => {
+    if (!bundle || !bundle.days) return null;
+    return bundle.days.find((d) => d.dayIndex === parseInt(dayIndex));
+  }, [bundle, dayIndex]);
 
   if (!dayData) {
     return (
-      <View style={styles.container}>
+      <View style={styles.centerContainer}>
         <Text>Menu not found!</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ 
+        headerTitle: `${dayNames[dayData.dayIndex]} Menu`,
+        headerShadowVisible: false 
+      }} />
+      
+      <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
+        {/* Day & Menu Title */}
+        <View style={styles.headerSection}>
+          <Text style={styles.dayText}>{dayNames[dayData.dayIndex]}</Text>
+          <Text style={styles.menuNameText}>{dayData.menuName}</Text>
+        </View>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#111827" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{dayData.day}'s Menu</Text>
-      </View>
+        {/* Nutrition Summary Card - New Informative Section */}
+        <View style={styles.nutritionCard}>
+          <Text style={styles.cardTitle}>Total Nutrition</Text>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{dayData.totalNutrition.calories}</Text>
+              <Text style={styles.statLabel}>kcal</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{dayData.totalNutrition.protein}g</Text>
+              <Text style={styles.statLabel}>Protein</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{dayData.totalNutrition.carbs}g</Text>
+              <Text style={styles.statLabel}>Carbs</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{dayData.totalNutrition.fat}g</Text>
+              <Text style={styles.statLabel}>Fats</Text>
+            </View>
+          </View>
+        </View>
 
-      <ScrollView style={styles.scrollArea}>
-        <Text style={styles.menuHeaderText}>{dayData.menuName}</Text>
+        {/* List Header */}
+        <View style={styles.listHeaderContainer}>
+          <Text style={styles.listHeaderText}>Meal Composition</Text>
+          <Text style={styles.itemCountText}>{dayData.items.length} Items</Text>
+        </View>
 
-        {/* Menu List */}
+        {/* Menu Items */}
         {dayData.items.map((menuItem, i) => (
           <View key={i} style={styles.menuItemRow}>
             <View style={styles.itemLeft}>
-              <Text style={styles.mealText}>{menuItem.itemName}</Text>
-              <View style={styles.nutritionRow}>
-                <Text style={styles.nutritionText}>
-                  {menuItem.nutrition.calories} Cal
-                </Text>
+              <View style={styles.titleRow}>
+                <CategoryIcon type={menuItem.category} size={14} />
+                <Text style={styles.mealText}>{menuItem.itemName}</Text>
+              </View>
+              <Text style={styles.descriptionText} numberOfLines={1}>
+                {menuItem.description || "Freshly prepared daily meal"}
+              </Text>
+              <View style={styles.itemNutritionTag}>
+                <MaterialCommunityIcons name="fire" size={12} color="#6B7280" />
+                <Text style={styles.nutritionText}>{menuItem.nutrition.calories} kcal</Text>
               </View>
             </View>
 
             <View style={styles.itemRight}>
-              <Text style={styles.quantityText}>x{menuItem.quantity}</Text>
-              {/* <Text style={styles.quantityText}>{menuItem.uom}</Text> */}
-
-              <CategoryIcon type={menuItem.category} size={14} />
+              <View style={styles.quantityBadge}>
+                <Text style={styles.quantityText}>× {menuItem.quantity}</Text>
+              </View>
             </View>
           </View>
         ))}
+        
+        {/* Quality Note */}
+        <View style={styles.footerNote}>
+          <Ionicons name="checkmark-circle" size={16} color="#059669" />
+          <Text style={styles.footerNoteText}>Standard portions optimized for health</Text>
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F9FAFB", // Light grey to match active orders theme
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 15,
-    paddingHorizontal: 15,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  backButton: {
-    marginRight: 15,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   scrollArea: {
     flex: 1,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
   },
-  menuHeaderText: {
-    fontSize: 22,
-    fontWeight: "bold",
+  headerSection: {
+    marginTop: 20,
+    marginBottom: 15,
+  },
+  dayText: {
+    fontSize: 14,
+    fontWeight: "700",
     color: "#004346",
-    marginVertical: 15,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
-  menuItemRow: {
+  menuNameText: {
+    fontSize: 26,
+    fontWeight: "800",
+    color: "#888a8eff",
+    marginTop: 4,
+  },
+  // Nutrition Card
+  nutritionCard: {
+    backgroundColor: "#004346",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 25,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  cardTitle: {
+    color: "#fafafaff",
+    fontSize: 15,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    marginBottom: 12,
+  },
+  statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderColor: "#E5E7EB",
+  },
+  statItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  statValue: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  statLabel: {
+    color: "#D1D5DB",
+    fontSize: 11,
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  // List Section
+  listHeaderContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  listHeaderText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+  },
+  itemCountText: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "600",
+  },
+  menuItemRow: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
   },
   itemLeft: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
   mealText: {
     fontSize: 16,
-    fontWeight: "600",
-    marginBottom: 4,
-    color: "#111827",
+    fontWeight: "700",
+    color: "#1F2937",
   },
-  nutritionRow: {
+  descriptionText: {
+    fontSize: 13,
+    color: "#6B7280",
+    marginBottom: 8,
+  },
+  itemNutritionTag: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   nutritionText: {
-    marginLeft: 8,
-    color: "#6B7280",
-    fontSize: 13,
+    marginLeft: 4,
+    color: "#4B5563",
+    fontSize: 11,
+    fontWeight: "600",
   },
-
   itemRight: {
-    alignItems: "flex-end",
-    flexDirection: "column",
-    gap: 3,
+    marginLeft: 10,
+  },
+  quantityBadge: {
+    backgroundColor: "#E0F2F1",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
   },
   quantityText: {
-    fontSize: 14,
-    color: "#6B7280",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#004346",
   },
+  footerNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    marginBottom: 40,
+    gap: 6,
+  },
+  footerNoteText: {
+    fontSize: 12,
+    color: "#6B7280",
+    fontWeight: "500",
+  }
 });

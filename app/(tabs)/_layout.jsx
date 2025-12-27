@@ -19,6 +19,7 @@ export default function TabsLayout() {
     "mySubscription",
     "orderHistory",
     "paymentSuccessScreen",
+    "createSubscription",
   ];
 
   const shouldHide = hideTabsOn.includes(current);
@@ -116,6 +117,9 @@ export default function TabsLayout() {
           },
         }}
       />
+
+      {/* Active Subscription  */}
+      {/* */}
 
       {/* PROFILE TAB */}
       <Tabs.Screen
