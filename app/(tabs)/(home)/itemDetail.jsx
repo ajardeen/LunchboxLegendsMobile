@@ -6,37 +6,25 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Image } from "expo-image";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import CustomPressable from "../../../components/UI/CustomPressable";
-import { bundleData } from "../../../services/data";
 import CategoryIcon from "../../../components/CategoryIcon";
 import { useCart } from "../../../context/CartContext";
-// --- Import the new component ---
-import AddOnSelector from "../../../components/AddOnSelector";
 import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
-import { useBundles } from "../../../hooks/Home/useBundles";
 import { useBundleData } from "../../../context/BundleContext";
 
-const dayNames = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const { width } = Dimensions.get("window");
 
-// Utility function (kept here for consistency)
-const getAddOnItemId = (bundleId, dayName) =>
-  `addon_bundle_${bundleId}_${dayName}`;
+const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const getAddOnItemId = (bundleId, dayName) => `addon_bundle_${bundleId}_${dayName}`;
 
 export default function ItemDetail() {
   const { getBundleById } = useBundleData();
-
   const bottomSheetRef = useRef(null);
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -49,11 +37,10 @@ export default function ItemDetail() {
   const { addToCart, cartItems } = useCart();
 
   const item = getBundleById(bundleId);
-  console.log("item", item);
 
   if (!item) {
     return (
-      <View style={styles.container}>
+      <View style={styles.centerContainer}>
         <Text>Item not found!</Text>
       </View>
     );
@@ -62,62 +49,16 @@ export default function ItemDetail() {
   const placeholderImage = require("../../../assets/lblplaceholder.jpg");
   const itemInCart = cartItems.find((cartItem) => cartItem.id === item.id);
 
-  const handleAddToCart = () => {
-    if (isAdding) return;
-
-    setIsAdding(true);
-    const cartItem = {
-      id: item.id,
-      name: item.name,
-      price: item.price,
-      orderType: item.bundleType,
-      quantity: 1,
-    };
-
-    setTimeout(() => {
-      // console.log("items",item);
-      console.log("cartItem", cartItem);
-
-      // Add the main bundle to the cart
-      addToCart(cartItem);
-      setIsAdding(false);
-      // Open the add-on sheet automatically after adding the bundle
-      // bottomSheetRef.current?.open();
-    }, 800);
-  };
-
-  const handleFavorite = () => {
-    const newState = !isFavorite;
-    setIsFavorite(newState);
-    console.log(
-      `Bundle ID ${item.id} is now ${newState ? "FAVORITED" : "UNFAVORITED"}.`
-    );
-  };
-
-  const handleAddonSheetOpen = () => {
-    if (!itemInCart) {
-      alert("Please add the main bundle to the cart first.");
-      return;
-    }
-    bottomSheetRef.current?.open();
-  };
-
-
-
   // --- Conditional Footer Button Component ---
   const FooterButton = () => {
     const button = itemInCart ? (
-      // RENDER: View in Cart Button (Outline style)
       <CustomPressable
         onPress={() => router.push("(tabs)/(myCart)")}
         style={[styles.actionButton, styles.viewInCartBtn]}
       >
-        <Text style={[styles.subscribeText, styles.viewInCartText]}>
-          VIEW IN CART
-        </Text>
+        <Text style={[styles.subscribeText, styles.viewInCartText]}>VIEW IN CART</Text>
       </CustomPressable>
     ) : (
-      // RENDER: Add to Cart Button (Solid style with spinner)
       <CustomPressable
         onPress={() =>
           router.push({
@@ -131,86 +72,78 @@ export default function ItemDetail() {
         {isAdding ? (
           <ActivityIndicator color="#fff" size="small" />
         ) : (
-          <Text style={styles.subscribeText}>Subscribe Now </Text>
+          <Text style={styles.subscribeText}>Subscribe Now • ₹{item.price}</Text>
         )}
       </CustomPressable>
     );
 
     return (
       <View style={styles.footerButtonWrapper}>
-        {/* <CustomPressable
-          onPress={handleFavorite}
-          style={styles.favoriteFooterButton}
-        >
-          <Ionicons
-            name={isFavorite ? "heart" : "heart-outline"}
-            size={24}
-            color={isFavorite ? "red" : "#1E1E1E"}
-          />
-        </CustomPressable> */}
-
         <View style={{ flex: 1 }}>{button}</View>
       </View>
     );
   };
-  // --- End of Conditional Footer Button Component ---
 
   return (
     <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+
+      {/* Header Image Section */}
       <View style={styles.headerImageContainer}>
         <Image
-          source={
-            item.bundleImage ? { uri: item.bundleImage } : placeholderImage
-          }
+          source={item.bundleImage ? { uri: item.bundleImage } : placeholderImage}
           style={styles.mainImage}
           contentFit="cover"
           transition={300}
         />
-
         <View style={styles.overlay}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.closeButton}
-          >
-            <Text style={styles.closeText}>
-              <Ionicons name="arrow-back" size={24} color="#000" />
-            </Text>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={24} color="#000" />
           </TouchableOpacity>
 
-          <View style={styles.titleContent}>
+          <View style={styles.headerContent}>
+            <View style={styles.badgeRow}>
+              <View style={styles.typeBadge}>
+                <Text style={styles.typeBadgeText}>{item.bundleMealType}</Text>
+              </View>
+              <CategoryIcon type={"veg"} size={14} />
+            </View>
             <Text style={styles.itemTitle}>{item.name}</Text>
             <Text style={styles.itemSubtitle}>{item.description}</Text>
-          </View>
-          <View style={styles.categoryIcon}>
-            <CategoryIcon type={"veg"} size={14} />
           </View>
         </View>
       </View>
 
-      <ScrollView style={styles.scrollArea}>
-        <View style={styles.menuHeader}>
-          <Text style={styles.menuHeaderText}>Daily Menu</Text>
-        </View>
-        {/* --- COMMON ADD-ON BUTTON --- */}
-        {/* {itemInCart && (
-          <View style={styles.commonAddOnWrapper}>
-            <Text style={styles.commonAddOnText}>Enhance your order:</Text>
-            <CustomPressable
-              onPress={handleAddonSheetOpen}
-              style={styles.commonAddonButton}
-            >
-              <Text style={styles.commonAddonButtonText}>+ Add Extras</Text>
-            </CustomPressable>
+      <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
+        {/* Bundle Insight Stats */}
+        <View style={styles.insightContainer}>
+          <View style={styles.insightBox}>
+            <MaterialCommunityIcons name="calendar-check" size={20} color="#004346" />
+            <Text style={styles.insightValue}>{item.totalMealsCount}</Text>
+            <Text style={styles.insightLabel}>Days</Text>
           </View>
-        )} */}
-        {/* --------------------------- */}
+          <View style={styles.insightDivider} />
+          <View style={styles.insightBox}>
+            <MaterialCommunityIcons name="currency-inr" size={20} color="#004346" />
+            <Text style={styles.insightValue}>{Math.round(item.price / item.totalMealsCount)}</Text>
+            <Text style={styles.insightLabel}>Per Meal</Text>
+          </View>
+          <View style={styles.insightDivider} />
+          <View style={styles.insightBox}>
+            <MaterialCommunityIcons name="fire" size={20} color="#004346" />
+            <Text style={styles.insightValue}>Avg. 450</Text>
+            <Text style={styles.insightLabel}>kcal/day</Text>
+          </View>
+        </View>
 
-        {item.days.map((dayObj, index) => {
+        <View style={styles.menuHeader}>
+          <Text style={styles.menuHeaderText}>Daily Menu Schedule</Text>
+          <Text style={styles.menuSubHeaderText}>Tap on a day to view meal details</Text>
+        </View>
+
+        {item.days.map((dayObj) => {
           const addOnId = getAddOnItemId(item.id, dayObj.day);
-          const appliedAddOnBundle = cartItems.find(
-            (cartItem) => cartItem.id === addOnId
-          );
-          const totalAddOnPrice = appliedAddOnBundle?.price || 0;
+          const appliedAddOnBundle = cartItems.find((cartItem) => cartItem.id === addOnId);
           const totalAddOnItems = appliedAddOnBundle?.products?.length || 0;
 
           return (
@@ -220,67 +153,64 @@ export default function ItemDetail() {
               onPress={() =>
                 router.push({
                   pathname: "/dayMenuList",
-                 params: { bundleId: item.id, dayIndex: dayObj.dayIndex },
+                  params: { bundleId: item.id, dayIndex: dayObj.dayIndex },
                 })
               }
             >
               <View style={styles.dayCardLeft}>
-                <View>
-                  <Text style={styles.dayCardDayText}>{dayNames[dayObj.dayIndex]}</Text>
-                  <Text style={styles.dayCardMenuName}>Menu: {dayObj.menuName}</Text>
-                  {totalAddOnItems > 0 && (
-                    <Text style={styles.addOnSummary}>
-                      + {totalAddOnItems} Extra Item(s) Added (₹
-                      {totalAddOnPrice})
-                    </Text>
-                  )}
-                </View>
+                <Text style={styles.dayCardDayText}>{dayNames[dayObj.dayIndex]}</Text>
+                <Text style={styles.dayCardMenuName} numberOfLines={1}>
+                  {dayObj.menuName}
+                </Text>
+                {totalAddOnItems > 0 && (
+                  <View style={styles.addonTag}>
+                    <Text style={styles.addonTagText}>+{totalAddOnItems} Add-ons</Text>
+                  </View>
+                )}
               </View>
+
               <View style={styles.dayCardRight}>
-                <View style={styles.dayCardChevron}>
+                <View style={styles.nutritionBadge}>
                   <Text style={styles.dayCardNutrition}>
                     {dayObj.totalNutrition.calories} Cal
                   </Text>
                 </View>
+                <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
               </View>
             </CustomPressable>
           );
         })}
+        <View style={{ height: 40 }} />
       </ScrollView>
 
       <View style={styles.footer}>
         <FooterButton />
       </View>
 
-      <Stack.Screen options={{ headerShown: false }} />
       <CustomBottomSheet
         ref={bottomSheetRef}
         title={bottomSheetTitle}
         snapPoints={["35%", "60%"]}
         initialIndex={-1}
       >
-        {/* --- Pass Props to the new component --- */}
-        {/* <AddOnSelector
-          itemDays={item.days}
-          bundleId={item.id}
-          cartItems={cartItems}
-          addToCart={addToCart}
-          onClose={() => bottomSheetRef.current?.close()} // Pass close function
-        /> */}
-        {/* -------------------------------------- */}
+        {/* AddOnSelector component code remains commented as per your request */}
       </CustomBottomSheet>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // --- Main Styles ---
   container: {
     flex: 1,
-    backgroundColor: "#ffffffff",
+    backgroundColor: "#fff",
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerImageContainer: {
-    height: 200,
+    height: 220,
     width: "100%",
   },
   mainImage: {
@@ -290,193 +220,188 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.35)",
     padding: 20,
     justifyContent: "space-between",
   },
-  closeButton: {
-    position: "absolute",
-    top: 30,
-    left: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderRadius: 9999,
-    width: 30,
-    height: 30,
+  backButton: {
+    marginTop: 30,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: 40,
+    height: 40,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 10,
   },
-  closeText: {
-    fontSize: 18,
-    color: "#000",
-    fontWeight: "bold",
+  headerContent: {
+    marginBottom: 10,
   },
-  titleContent: {
-    position: "absolute",
-    bottom: 20,
-    left: 20,
+  badgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  typeBadge: {
+    backgroundColor: "#004346",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
   itemTitle: {
-    fontSize: 32,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "800",
     color: "#fff",
   },
   itemSubtitle: {
-    fontSize: 16,
-    color: "#fff",
-    marginBottom: 5,
-  },
-  categoryIcon: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    backgroundColor: "#fff",
+    fontSize: 15,
+    color: "#E5E7EB",
+    marginTop: 4,
   },
   scrollArea: {
     flex: 1,
-    paddingHorizontal: 15,
-    paddingTop: 10,
-    marginBottom: 100,
+    paddingHorizontal: 20,
+    marginTop: -20,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  insightContainer: {
+    flexDirection: "row",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 16,
+    padding: 15,
+    marginTop: 20,
+    marginBottom: 25,
+    borderWidth: 1,
+    borderColor: "#F3F4F6",
+  },
+  insightBox: {
+    flex: 1,
+    alignItems: "center",
+  },
+  insightValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111827",
+    marginTop: 4,
+  },
+  insightLabel: {
+    fontSize: 11,
+    color: "#6B7280",
+    textTransform: "uppercase",
+  },
+  insightDivider: {
+    width: 1,
+    height: "100%",
+    backgroundColor: "#E5E7EB",
   },
   menuHeader: {
-    marginBottom: 5,
+    marginBottom: 15,
   },
   menuHeaderText: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#004346",
-    paddingVertical: 10,
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#111827",
+  },
+  menuSubHeaderText: {
+    fontSize: 14,
+    color: "#6B7280",
+    marginTop: 2,
   },
   dayCard: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    borderRadius: 12,
+    backgroundColor: "#fff",
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E5E7EB",
+    borderColor: "#F3F4F6",
+    // Shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   dayCardLeft: {
     flex: 1,
-    justifyContent: "space-between",
-    paddingRight: 10,
   },
   dayCardDayText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#525354ff",
-    letterSpacing: 0.2,
-    textTransform: "capitalize",
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#004346",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   dayCardMenuName: {
     fontSize: 16,
-    color: "#004346",
-    textTransform: "capitalize",
+    fontWeight: "600",
+    color: "#374151",
     marginTop: 2,
   },
   dayCardRight: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 10,
   },
-  dayCardChevron: {
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-end",
+  nutritionBadge: {
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   dayCardNutrition: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    marginRight: 8,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#4B5563",
   },
-  addOnSummary: {
-    fontSize: 14,
+  addonTag: {
+    marginTop: 6,
+    backgroundColor: "#E0F2F1",
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  addonTagText: {
+    fontSize: 11,
+    fontWeight: "700",
     color: "#004346",
-    fontWeight: "bold",
-    marginTop: 5,
   },
-  // --- Main Footer Button Styles ---
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: 20,
     paddingVertical: 15,
     backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderColor: "#e5e7eb",
-    width: "100%",
-  },
-  footerButtonWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  favoriteFooterButton: {
-    height: 50,
-    width: 50,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
+    borderColor: "#F3F4F6",
   },
   actionButton: {
-    flex: 1,
-    borderRadius: 30,
-    paddingVertical: 15,
+    backgroundColor: "#111827",
+    height: 56,
+    borderRadius: 16,
     alignItems: "center",
-    minHeight: 50,
-    backgroundColor: "#1E1E1E",
     justifyContent: "center",
-    minWidth: "90%",
-    minHeight: 60,
   },
-  addToCardBtnDisabled: {
-    opacity: 0.7,
+  subscribeText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
   viewInCartBtn: {
     backgroundColor: "#fff",
     borderWidth: 2,
-    borderColor: "#1E1E1E",
+    borderColor: "#111827",
   },
   viewInCartText: {
-    color: "#1E1E1E",
-  },
-  subscribeText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  // --- COMMON ADD-ONS BUTTON STYLES (Kept here as it's part of ItemDetail UI) ---
-  commonAddOnWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingBottom: 15,
-    paddingHorizontal: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    marginBottom: 10,
-  },
-  commonAddOnText: {
-    fontSize: 16,
-    color: "#374151",
-    fontWeight: "500",
-  },
-  commonAddonButton: {
-    backgroundColor: "#004346",
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-  },
-  commonAddonButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: "#111827",
   },
 });
