@@ -1,4 +1,4 @@
-import  { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,225 +7,502 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Animated,
   ActivityIndicator,
   Alert,
-  Keyboard,
+  ScrollView,
 } from "react-native";
+
 import { LinearGradient } from "expo-linear-gradient";
+
+import {
+  useAuthRegister,
+  useAuthLogin,
+  useAuthVerifyOtp,
+  useAuthResendOtp,
+} from "../../hooks/Auth/useAuth";
+
 import { COLORS } from "../../theme/colors";
-import { useAuthRegister, useAuthLogin } from "../../hooks/Auth/useAuth";
 import { useAuth } from "../../context/AuthContext";
 
 const Welcome2Screen = () => {
-  const { login } = useAuth();
-  const [mode, setMode] = useState(null); // null | "login" | "signup"
-  const yOffset = useRef(new Animated.Value(0)).current;
+  const { login: contextLogin } = useAuth();
 
-  // form states
+  const [mode, setMode] = useState(null);
+
+  // form
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const animateUp = () => {
-    Animated.timing(yOffset, {
-      toValue: -20,
-      duration: 450,
-      useNativeDriver: true,
-    }).start();
-  };
+  // otp
+  const [otp, setOtp] = useState("");
+  const [isOtpStep, setIsOtpStep] = useState(false);
 
-  const animateDown = () => {
-    Animated.timing(yOffset, {
-      toValue: 0,
-      duration: 450,
-      useNativeDriver: true,
-    }).start();
-  };
+  // temp auth data
+  const [tempUserData, setTempUserData] = useState(null);
 
-  const registerMutation = useAuthRegister({
-    onSuccess: () => {
-      Alert.alert("Success", "Account created! Check email for OTP and login.");
-      setMode("login");
-    },
-    onError: (err) => {
-      Alert.alert("Error", err?.response?.data?.message || "Signup failed");
-    },
-  });
+  /**
+   * Register
+   */
+  const { mutate: register, isPending: isRegistering } =
+    useAuthRegister({
+      onSuccess: (data) => {
+        setTempUserData({
+          email,
+          userId: data?.userId,
+        });
 
-  const loginMutation = useAuthLogin({
-    onSuccess: (res) => {
-      const token = res?.token;
-      const customer = res?.customer;
+        setIsOtpStep(true);
 
-      if (!token) return Alert.alert("Error", "Login failed");
+        Alert.alert(
+          "OTP Sent",
+          "Verification code sent to your email"
+        );
+      },
 
-      login(token, customer);
-    },
-    onError: (err) => {
-      Alert.alert("Error", err?.response?.data?.message || "Login failed");
-    },
-  });
+      onError: (err) => {
+        Alert.alert(
+          "Registration Error",
+          err?.response?.data?.message ||
+            "Something went wrong"
+        );
+      },
+    });
 
-  const handleSubmit = () => {
+  /**
+   * Login
+   */
+  const { mutate: loginAttempt, isPending: isLoggingIn } =
+    useAuthLogin({
+      onSuccess: (data) => {
+        setTempUserData({
+          email,
+          userId: data?.userId,
+        });
+
+        setIsOtpStep(true);
+
+        Alert.alert(
+          "OTP Sent",
+          "Login verification code sent to your email"
+        );
+      },
+
+      onError: (err) => {
+        Alert.alert(
+          "Login Error",
+          err?.response?.data?.message ||
+            "Invalid credentials"
+        );
+      },
+    });
+
+  /**
+   * Verify OTP
+   */
+  const { mutate: verifyOtp, isPending: isVerifyingOtp } =
+    useAuthVerifyOtp({
+      onSuccess: async (res) => {
+        await contextLogin(
+          res?.token,
+          res?.customer
+        );
+
+        Alert.alert(
+          "Success",
+          "Authenticated successfully"
+        );
+      },
+
+      onError: (err) => {
+        Alert.alert(
+          "OTP Error",
+          err?.response?.data?.message ||
+            "Invalid OTP"
+        );
+      },
+    });
+
+  /**
+   * Resend OTP
+   */
+  const { mutate: resendOtp, isPending: isResendingOtp } =
+    useAuthResendOtp({
+      onSuccess: () => {
+        Alert.alert(
+          "OTP Sent",
+          "New OTP sent to your email"
+        );
+      },
+
+      onError: (err) => {
+        Alert.alert(
+          "Error",
+          err?.response?.data?.message ||
+            "Failed to resend OTP"
+        );
+      },
+    });
+
+  /**
+   * Initial Submit
+   */
+  const handleInitialSubmit = () => {
     if (mode === "signup") {
-      if (!fullName || !phone || !email || !password) {
-        Alert.alert("Validation", "All fields are required.");
-        return;
+      if (
+        !fullName ||
+        !phone ||
+        !email ||
+        !password
+      ) {
+        return Alert.alert(
+          "Error",
+          "All fields are required"
+        );
       }
-      registerMutation.mutate({
+
+      register({
         fullName,
         phone,
         email,
         password,
-        role: "customer",
       });
     } else {
       if (!email || !password) {
-        Alert.alert("Validation", "Email and password required.");
-        return;
+        return Alert.alert(
+          "Error",
+          "Email and password are required"
+        );
       }
-      loginMutation.mutate({ email, password, role: "customer" });
+
+      loginAttempt({
+        email,
+        password,
+      });
     }
   };
 
-  const renderForm = () => (
-    <Animated.View
-      style={[styles.formContainer, { transform: [{ translateY: yOffset }] }]}
-    >
+  /**
+   * Verify OTP
+   */
+  const handleVerifyOTP = () => {
+    if (!otp || otp.length < 5) {
+      return Alert.alert(
+        "Error",
+        "Enter valid OTP"
+      );
+    }
+
+    verifyOtp({
+      email: tempUserData?.email,
+      otp,
+    });
+  };
+
+  /**
+   * Resend OTP
+   */
+  const handleResendOtp = () => {
+    resendOtp({
+      email: tempUserData?.email,
+    });
+  };
+
+  /**
+   * OTP Form
+   */
+  const renderOTPForm = () => (
+    <View style={styles.formContainer}>
+      <Text style={styles.otpTitle}>
+        Verify OTP
+      </Text>
+
+      <Text style={styles.otpSubtitle}>
+        Enter OTP sent to {tempUserData?.email}
+      </Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Enter OTP"
+        placeholderTextColor="#888"
+        keyboardType="number-pad"
+        maxLength={5}
+        value={otp}
+        onChangeText={setOtp}
+        autoFocus
+      />
+
+      <TouchableOpacity
+        style={styles.submitBtn}
+        onPress={handleVerifyOTP}
+        disabled={isVerifyingOtp}
+      >
+        {isVerifyingOtp ? (
+          <ActivityIndicator
+            color={COLORS.white}
+          />
+        ) : (
+          <Text style={styles.submitText}>
+            Verify & Login
+          </Text>
+        )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={handleResendOtp}
+        disabled={isResendingOtp}
+      >
+        <Text style={styles.linkText}>
+          {isResendingOtp
+            ? "Sending..."
+            : "Resend OTP"}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => setIsOtpStep(false)}
+      >
+        <Text style={styles.linkText}>
+          Back
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  /**
+   * Main Form
+   */
+  const renderMainForm = () => (
+    <View style={styles.formContainer}>
       {mode === "signup" && (
         <>
           <TextInput
             style={styles.input}
             placeholder="Full Name"
+            placeholderTextColor="#888"
             value={fullName}
             onChangeText={setFullName}
-            onFocus={animateUp}
-            onBlur={animateDown}
           />
+
           <TextInput
             style={styles.input}
             placeholder="Phone Number"
+            placeholderTextColor="#888"
             keyboardType="phone-pad"
             value={phone}
             onChangeText={setPhone}
-            onFocus={animateUp}
-            onBlur={animateDown}
           />
         </>
       )}
 
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder="Email Address"
+        placeholderTextColor="#888"
+        keyboardType="email-address"
+        autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
-        onFocus={animateUp}
-        onBlur={animateDown}
       />
+
       <TextInput
         style={styles.input}
         placeholder="Password"
+        placeholderTextColor="#888"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
-        onFocus={animateUp}
-        onBlur={animateDown}
       />
 
       <TouchableOpacity
         style={styles.submitBtn}
-        onPress={handleSubmit}
-        disabled={registerMutation.isPending || loginMutation.isPending}
+        onPress={handleInitialSubmit}
+        disabled={
+          isRegistering || isLoggingIn
+        }
       >
-        {registerMutation.isPending || loginMutation.isPending ? (
-          <ActivityIndicator color={COLORS.white} />
+        {isRegistering ||
+        isLoggingIn ? (
+          <ActivityIndicator
+            color={COLORS.white}
+          />
         ) : (
           <Text style={styles.submitText}>
-            {mode === "login" ? "Log in" : "Sign up"}
+            {mode === "login"
+              ? "Get Login OTP"
+              : "Register"}
           </Text>
         )}
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() => setMode(mode === "login" ? "signup" : "login")}
+        onPress={() =>
+          setMode(
+            mode === "login"
+              ? "signup"
+              : "login"
+          )
+        }
       >
         <Text style={styles.linkText}>
           {mode === "login"
-            ? "Don't have an account? Sign up"
+            ? "Need an account? Sign up"
             : "Already have an account? Log in"}
         </Text>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 
   return (
     <LinearGradient
-      colors={[COLORS.primary, COLORS.black]}
+      colors={[
+        COLORS.primary,
+        COLORS.black,
+      ]}
       style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
     >
       <KeyboardAvoidingView
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : "height"
+        }
         style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.centerContent}>
-          <Text style={styles.title}>Lunchbox Legends</Text>
-          <Text style={styles.subtitle}>Home food isn’t far anymore</Text>
-        </View>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.centerContent}>
+            <Text style={styles.title}>
+              Lunchbox Legends
+            </Text>
 
-        {mode ? (
-          renderForm()
-        ) : (
-          <View style={styles.bottomButtons}>
-            <TouchableOpacity
-              style={styles.darkBtn}
-              onPress={() => setMode("signup")}
-            >
-              <Text style={styles.darkBtnText}>Sign up</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.whiteBtn}
-              onPress={() => setMode("login")}
-            >
-              <Text style={styles.whiteBtnText}>Log in</Text>
-            </TouchableOpacity>
+            <Text style={styles.subtitle}>
+              Home food isn’t far anymore
+            </Text>
           </View>
-        )}
+
+          {isOtpStep ? (
+            renderOTPForm()
+          ) : mode ? (
+            renderMainForm()
+          ) : (
+            <View style={styles.bottomButtons}>
+              <TouchableOpacity
+                style={styles.darkBtn}
+                onPress={() =>
+                  setMode("signup")
+                }
+              >
+                <Text style={styles.darkBtnText}>
+                  Sign up
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.whiteBtn}
+                onPress={() =>
+                  setMode("login")
+                }
+              >
+                <Text style={styles.whiteBtnText}>
+                  Log in
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
       </KeyboardAvoidingView>
     </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centerContent: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { color: COLORS.white, fontSize: 30, fontWeight: "700" },
-  subtitle: { color: COLORS.white, fontSize: 16, marginTop: 6 },
-  bottomButtons: { paddingHorizontal: 25, paddingBottom: 60, gap: 14 },
+  container: {
+    flex: 1,
+  },
+
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: 200,
+  },
+
+  title: {
+    color: COLORS.white,
+    fontSize: 30,
+    fontWeight: "700",
+  },
+
+  subtitle: {
+    color: COLORS.white,
+    fontSize: 16,
+    marginTop: 6,
+  },
+
+  bottomButtons: {
+    paddingHorizontal: 25,
+    paddingBottom: 60,
+    gap: 14,
+  },
+
   darkBtn: {
     backgroundColor: COLORS.black,
     padding: 16,
     borderRadius: 30,
     alignItems: "center",
   },
-  darkBtnText: { color: COLORS.white, fontSize: 18 },
+
+  darkBtnText: {
+    color: COLORS.white,
+    fontSize: 18,
+  },
+
   whiteBtn: {
     backgroundColor: COLORS.white,
     padding: 16,
     borderRadius: 30,
     alignItems: "center",
   },
-  whiteBtnText: { color: COLORS.black, fontSize: 18 },
-  formContainer: { paddingHorizontal: 25, paddingBottom: 50, gap: 10 },
-  input: {
-    backgroundColor: "rgba(255,255,255,0.9)",
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 6,
+
+  whiteBtnText: {
+    color: COLORS.black,
+    fontSize: 18,
   },
+
+  formContainer: {
+    paddingHorizontal: 25,
+    paddingBottom: 50,
+    gap: 10,
+  },
+
+  otpTitle: {
+    color: COLORS.white,
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+
+  otpSubtitle: {
+    color: "#ccc",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+
+  input: {
+    backgroundColor:
+      "rgba(255,255,255,0.9)",
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: "#000",
+  },
+
   submitBtn: {
     backgroundColor: COLORS.black,
     padding: 16,
@@ -234,12 +511,18 @@ const styles = StyleSheet.create({
     borderColor: "#fff",
     borderWidth: 0.6,
   },
-  submitText: { color: COLORS.white, textAlign: "center", fontSize: 18 },
+
+  submitText: {
+    color: COLORS.white,
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "600",
+  },
+
   linkText: {
     color: COLORS.white,
     textAlign: "center",
     marginTop: 14,
-    fontSize: 14,
     textDecorationLine: "underline",
   },
 });

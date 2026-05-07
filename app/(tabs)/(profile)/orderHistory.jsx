@@ -4,27 +4,27 @@ import { Ionicons } from "@expo/vector-icons";
 
 const OrderHistory = () => {
   const orders = [
-    {
-      id: "#ORD1001",
-      title: "Paneer Butter Masala + Naan",
-      date: "Oct 21, 2025",
-      amount: "₹249",
-      status: "Delivered",
-    },
-    {
-      id: "#ORD1002",
-      title: "Veg Thali Combo",
-      date: "Oct 18, 2025",
-      amount: "₹199",
-      status: "Cancelled",
-    },
-    {
-      id: "#ORD1003",
-      title: "Dal Fry + Jeera Rice",
-      date: "Oct 15, 2025",
-      amount: "₹179",
-      status: "Delivered",
-    },
+    // {
+    //   id: "#ORD1001",
+    //   title: "Paneer Butter Masala + Naan",
+    //   date: "Oct 21, 2025",
+    //   amount: "₹249",
+    //   status: "Delivered",
+    // },
+    // {
+    //   id: "#ORD1002",
+    //   title: "Veg Thali Combo",
+    //   date: "Oct 18, 2025",
+    //   amount: "₹199",
+    //   status: "Cancelled",
+    // },
+    // {
+    //   id: "#ORD1003",
+    //   title: "Dal Fry + Jeera Rice",
+    //   date: "Oct 15, 2025",
+    //   amount: "₹179",
+    //   status: "Delivered",
+    // },
   ];
 
   const getStatusColor = (status) => {

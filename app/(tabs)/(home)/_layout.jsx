@@ -10,6 +10,7 @@ const _layout = () => {
         animationTypeForReplace: "push",
         gestureEnabled: true,
         lazy: false,
+        
       }}
     >
       <Stack.Screen name="index" />
@@ -23,6 +24,7 @@ const _layout = () => {
         name="dayMenuList"
         options={{
           tabBarStyle: { display: "none" }, // hide tabs
+         
           headerShown: true,
           title: "Back",
         }}
@@ -30,6 +32,8 @@ const _layout = () => {
       <Stack.Screen
         name="createSubscription"
         options={{
+           headerShown: true,
+          title: "Create Subscription",
           tabBarStyle: { display: "none" },
         }}
       />

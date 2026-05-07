@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "562993150845",
+    "project_id": "lunchbox-legends",
+    "storage_bucket": "lunchbox-legends.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:562993150845:android:2b831d8042adcd8b0caa14",
+        "android_client_info": {
+          "package_name": "com.solorival.LunchboxLegendsMobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_O6qwQHtNLn8JyPOJyvdQGzJwPcAbBas"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

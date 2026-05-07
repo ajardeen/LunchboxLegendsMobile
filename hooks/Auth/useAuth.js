@@ -1,32 +1,44 @@
 import { useMutation } from "@tanstack/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import {
   authRegister,
   authLogin,
-  authForgetPassword,
+  authVerifyOtp,
+  authResendOtp,
 } from "../../services/Auth/authService";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
- * Register
+ * Register -> Send OTP
  */
 export const useAuthRegister = (options = {}) => {
   return useMutation({
-    mutationFn: (payload) => authRegister(payload),
+    mutationFn: authRegister,
     ...options,
   });
 };
 
 /**
- * Login (auto save token)
+ * Login -> Send OTP
  */
 export const useAuthLogin = (options = {}) => {
   return useMutation({
-    mutationFn: async (payload) => {
-      const res = await authLogin(payload);
+    mutationFn: authLogin,
+    ...options,
+  });
+};
 
-      // Save token only if present
-      if (res?.data?.token) {
-        await AsyncStorage.setItem("token", res.data.token);
+/**
+ * Verify OTP
+ */
+export const useAuthVerifyOtp = (options = {}) => {
+  return useMutation({
+    mutationFn: async (payload) => {
+      const res = await authVerifyOtp(payload);
+
+      // save token
+      if (res?.token) {
+        await AsyncStorage.setItem("token", res.token);
       }
 
       return res;
@@ -36,11 +48,11 @@ export const useAuthLogin = (options = {}) => {
 };
 
 /**
- * Forgot Password
+ * Resend OTP
  */
-export const useAuthForgotPassword = (options = {}) => {
+export const useAuthResendOtp = (options = {}) => {
   return useMutation({
-    mutationFn: (payload) => authForgetPassword(payload),
+    mutationFn: authResendOtp,
     ...options,
   });
 };

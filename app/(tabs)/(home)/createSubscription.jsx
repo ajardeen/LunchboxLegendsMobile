@@ -159,22 +159,22 @@ const handleCreateSubscription = async () => {
         </View>
 
         {/* Delivery instruction */}
-        <Pressable style={styles.listRow}>
+        {/* <Pressable style={styles.listRow}>
           <Text>Delivery instructions</Text>
           <Text style={styles.subText}>{deliveryInstruction}</Text>
-        </Pressable>
+        </Pressable> */}
 
         {/* Reminder */}
-        <Pressable style={styles.listRow}>
+        {/* <Pressable style={styles.listRow}>
           <Text>Remind before subscription ends</Text>
           <Text style={styles.subText}>{reminder}</Text>
-        </Pressable>
+        </Pressable> */}
 
         {/* WhatsApp */}
-        <View style={styles.switchRow}>
+        {/* <View style={styles.switchRow}>
           <Text>Send daily menu updates on WhatsApp</Text>
           <Switch value={whatsappUpdates} onValueChange={setWhatsappUpdates} />
-        </View>
+        </View> */}
       </ScrollView>
 
       {/* Footer */}
@@ -184,8 +184,9 @@ const handleCreateSubscription = async () => {
           style={styles.addressRow}
           onPress={() => addressSheetRef.current?.open()}
         >
-          <Ionicons name="location-outline" size={20} />
+          <Ionicons name="location-outline" color={"red"} size={20} />
           <View style={{ flex: 1 }}>
+            <Text style={styles.addressText}>Delivery Address</Text>
             {selectedAddress ? (
               <>
                 <Text style={styles.addressText}>{selectedAddress.label}</Text>
@@ -265,9 +266,9 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: "#fff",
     paddingHorizontal: 5,
-    paddingVertical: 3,
+    paddingVertical: 15,
     // borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 20,
     borderBottomWidth: 1,
     borderColor: "#E5E7EB",
   },
@@ -333,6 +334,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 12,
+    
   },
   deliveryActive: {
     borderColor: "#004346",

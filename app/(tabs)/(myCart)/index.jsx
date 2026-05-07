@@ -38,7 +38,7 @@ const useCartActions = () => {
       updateQuantity: (id, type) => updateQuantityRef.current(id, type),
       removeItem: (id) => removeItemRef.current(id),
     }),
-    []
+    [],
   );
 };
 
@@ -91,7 +91,7 @@ const CartItem = memo(
       prevProps.item.price === nextProps.item.price &&
       prevProps.item.name === nextProps.item.name
     );
-  }
+  },
 );
 
 CartItem.displayName = "CartItem";
@@ -115,7 +115,7 @@ const HiddenItem = memo(
       </View>
     );
   },
-  (prevProps, nextProps) => prevProps.item.id === nextProps.item.id
+  (prevProps, nextProps) => prevProps.item.id === nextProps.item.id,
 );
 
 HiddenItem.displayName = "HiddenItem";
@@ -138,12 +138,12 @@ const CartList = memo(
           onViewDetails={onViewDetails}
         />
       ),
-      [onUpdateQuantity, onViewDetails]
+      [onUpdateQuantity, onViewDetails],
     );
 
     const renderHiddenItem = useCallback(
       ({ item }) => <HiddenItem item={item} onRemove={onRemoveItem} />,
-      [onRemoveItem]
+      [onRemoveItem],
     );
 
     const keyExtractor = useCallback((item) => item.id, []);
@@ -167,7 +167,7 @@ const CartList = memo(
         windowSize={5}
       />
     );
-  }
+  },
 );
 
 CartList.displayName = "CartList";
@@ -186,7 +186,7 @@ const MyCart = () => {
     if (customerData?.customer?.deliveryAddress) {
       setCustomerDeliveryAddress(customerData.customer.deliveryAddress);
       const defaultAddr = customerData.customer.deliveryAddress.find(
-        (a) => a.isDefault
+        (a) => a.isDefault,
       );
       if (defaultAddr) setSelectedAddress(defaultAddr._id);
     }
@@ -219,7 +219,7 @@ const MyCart = () => {
       return null;
 
     const found = customerDeliveryAddress.find(
-      (addr) => addr._id === selectedAddress
+      (addr) => addr._id === selectedAddress,
     );
     return found || null;
   }, [customerDeliveryAddress, selectedAddress]);
@@ -229,7 +229,7 @@ const MyCart = () => {
       return;
 
     const found = customerDeliveryAddress.find(
-      (addr) => addr._id === selectedAddress
+      (addr) => addr._id === selectedAddress,
     );
 
     if (!found) {
@@ -246,7 +246,7 @@ const MyCart = () => {
         icon: require("../../../assets/gpayicon.png"),
       },
     ],
-    []
+    [],
   );
 
   const handleViewItemDetails = useCallback((item) => {
@@ -274,7 +274,7 @@ const MyCart = () => {
         paymentMethod: paymentMethod,
       }));
 
-      console.log("--- FINAL ORDER DETAILS ---", orderDetails);
+      // console.log("--- FINAL ORDER DETAILS ---", orderDetails);
 
       await createOrder.mutateAsync(orderDetails);
 

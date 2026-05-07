@@ -55,7 +55,7 @@ const addressScreen = () => {
   };
 
   useEffect(() => {
-    console.log("customerEditAddress", customerEditAddress);
+    // console.log("customerEditAddress", customerEditAddress);
     if (customerEditAddress) {
       setEditingAddress(customerEditAddress.address);
     }
@@ -146,16 +146,16 @@ const addressScreen = () => {
         setCountry(firstAddress.country || "");
 
         // 4. Console Log the details as requested
-        console.log("--- Reverse Geocoding Details ---");
-        console.log("Latitude:", coords.latitude);
-        console.log("Longitude:", coords.longitude);
-        console.log("Street:", firstAddress.street);
-        console.log("City:", firstAddress.city);
-        console.log("Pin Code:", firstAddress.postalCode);
-        console.log("Country:", firstAddress.country);
-        console.log("Full Address Object:", firstAddress);
-        console.log("Full Geocode Result Array:", geocodeResultData);
-        console.log("---------------------------------");
+        // console.log("--- Reverse Geocoding Details ---");
+        // console.log("Latitude:", coords.latitude);
+        // console.log("Longitude:", coords.longitude);
+        // console.log("Street:", firstAddress.street);
+        // console.log("City:", firstAddress.city);
+        // console.log("Pin Code:", firstAddress.postalCode);
+        // console.log("Country:", firstAddress.country);
+        // console.log("Full Address Object:", firstAddress);
+        // console.log("Full Geocode Result Array:", geocodeResultData);
+        // console.log("---------------------------------");
       }
     } catch (error) {
       console.log("Location or Geocoding Error:", error);
@@ -165,14 +165,14 @@ const addressScreen = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("location (coords):", location);
-    console.log("geocodeResult:", geocodeResult);
-    console.log("error:", errorMsg);
-  }, [location, geocodeResult, errorMsg]);
+  // useEffect(() => {
+  //   console.log("location (coords):", location);
+  //   console.log("geocodeResult:", geocodeResult);
+  //   console.log("error:", errorMsg);
+  // }, [location, geocodeResult, errorMsg]);
 
   const handleLocationPermission = () => {
-    console.log("Getting location and address...");
+    // console.log("Getting location and address...");
     getCurrentLocation();
   };
 
@@ -221,7 +221,7 @@ const addressScreen = () => {
         body: newAddressBody,
       });
 
-      console.log("Add Address Success Response:", response);
+      // console.log("Add Address Success Response:", response);
 
       Alert.alert("Success", "Address added successfully!", [
         {

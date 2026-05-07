@@ -27,7 +27,8 @@ const Welcome1Screen = () => {
 
       <TouchableOpacity
         style={styles.nextBtn}
-        onPress={() => router.push("/Welcome2Screen")}
+        // onPress={() => router.push("/Welcome2Screen")}
+        onPress={() => router.push("/(tabs)/(home)")}
       >
         <Text style={styles.arrow}>→</Text>
       </TouchableOpacity>

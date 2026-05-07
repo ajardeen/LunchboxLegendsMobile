@@ -7,6 +7,7 @@ import { useRouter } from "expo-router";
 import CustomPressable from "./UI/CustomPressable";
 
 export default function SubscriptionCard({ item }) {
+  // console.log("item",item);
   
   const router = useRouter();
   const placeholderImage = require("../assets/lblplaceholder.jpg");
@@ -35,7 +36,7 @@ export default function SubscriptionCard({ item }) {
       <View style={styles.card}>
         <Image
           source={
-            item.bundleImage ? { uri: item.bundleImage } : placeholderImage
+            item.imgUrl ? { uri: item.imgUrl } : placeholderImage
           }
           style={styles.cardImage}
           contentFit="cover"

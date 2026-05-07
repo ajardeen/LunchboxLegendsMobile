@@ -20,7 +20,7 @@ export const useCreateOrder = () => {
     mutationFn: createOrder,
     onSuccess: () => {
       //   toast.success("Order created successfully!");
-      console.log("Order created");
+      // console.log("Order created");
       Alert.alert("Order Created");
       queryClient.invalidateQueries(["orders"]);
     },

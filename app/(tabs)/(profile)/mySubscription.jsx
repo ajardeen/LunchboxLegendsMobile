@@ -8,7 +8,7 @@ import { useCustomerSubscriptions } from "../../../hooks/Order/useCustomerSubscr
 const mySubscription = () => {
   const { customerId } = useCustomer();
   const { data = [], isLoading } = useCustomerSubscriptions(customerId);
-  console.log("sub data",data);
+  // console.log("sub data",data);
 
 
   const getStatusStyles = (status) => {

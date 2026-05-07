@@ -16,6 +16,7 @@ import CategoryIcon from "../../../components/CategoryIcon";
 import { useCart } from "../../../context/CartContext";
 import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
 import { useBundleData } from "../../../context/BundleContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -85,13 +86,15 @@ export default function ItemDetail() {
   };
 
   return (
+    <SafeAreaView style={{flex:1}}>
+
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header Image Section */}
       <View style={styles.headerImageContainer}>
         <Image
-          source={item.bundleImage ? { uri: item.bundleImage } : placeholderImage}
+          source={item.imgUrl ? { uri: item.imgUrl } : placeholderImage}
           style={styles.mainImage}
           contentFit="cover"
           transition={300}
@@ -141,14 +144,14 @@ export default function ItemDetail() {
           <Text style={styles.menuSubHeaderText}>Tap on a day to view meal details</Text>
         </View>
 
-        {item.days.map((dayObj) => {
+        {item.days.map((dayObj,idx) => {
           const addOnId = getAddOnItemId(item.id, dayObj.day);
           const appliedAddOnBundle = cartItems.find((cartItem) => cartItem.id === addOnId);
           const totalAddOnItems = appliedAddOnBundle?.products?.length || 0;
 
           return (
             <CustomPressable
-              key={dayObj.menuId}
+              key={idx}
               style={styles.dayCard}
               onPress={() =>
                 router.push({
@@ -196,6 +199,7 @@ export default function ItemDetail() {
         {/* AddOnSelector component code remains commented as per your request */}
       </CustomBottomSheet>
     </View>
+    </SafeAreaView>
   );
 }
 
@@ -220,12 +224,12 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.35)",
+    backgroundColor: "rgba(11, 9, 9, 0.35)",
     padding: 20,
     justifyContent: "space-between",
   },
   backButton: {
-    marginTop: 30,
+    marginTop: 10,
     backgroundColor: "#fff",
     borderRadius: 12,
     width: 40,
@@ -378,6 +382,10 @@ const styles = StyleSheet.create({
     color: "#004346",
   },
   footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     paddingHorizontal: 20,
     paddingVertical: 15,
     backgroundColor: "#fff",

@@ -12,6 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useCustomerOrders } from "../../../hooks/Order/useOrder";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useCustomer } from "../../../context/CustomerContext";
 
 const formatDateHeader = (isoDate) => {
   const date = new Date(isoDate);
@@ -53,11 +55,14 @@ const getStatusBadge = (kitchenStatus, deliveryStatus) => {
 };
 
 export default function index() {
+  const {customer}=useCustomer();
+  // console.log("customer",customer);
+  
   const {
     data: customerOrderData,
     isLoading,
     refetch,
-  } = useCustomerOrders("69282bc30a201c13d867523a");
+  } = useCustomerOrders(customer?._id);
   const router = useRouter();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -66,14 +71,15 @@ export default function index() {
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
-    console.log("customerOrderData", customerOrderData);
+    // console.log("customerOrderData", customerOrderData);
 
     if (customerOrderData?.data) {
       let apiOrders = customerOrderData.data;
 
       if (selectedDate) {
         apiOrders = apiOrders.filter(
-          (o) => new Date(o.date).toDateString() === selectedDate.toDateString()
+          (o) =>
+            new Date(o.date).toDateString() === selectedDate.toDateString(),
         );
       }
 
@@ -101,7 +107,7 @@ export default function index() {
   const renderOrderCard = (order) => {
     const { text, color, bg, icon } = getStatusBadge(
       order.kitchenStatus,
-      order.deliveryStatus
+      order.deliveryStatus,
     );
     const itemString = order.items
       .map((item) => `${item.name} (${item.qty})`)
@@ -149,16 +155,18 @@ export default function index() {
     );
   };
 
-  if (isLoading && !refreshing)
-    return (
-      <ActivityIndicator
-        style={styles.loadingContainer}
-        size="large"
-        color="#007AFF"
-      />
-    );
+  // if (isLoading && !refreshing)
+  //   return (
+  //     <ActivityIndicator
+  //       style={styles.loadingContainer}
+  //       size="large"
+  //       color="#007AFF"
+  //     />
+  //   );
 
   return (
+    <SafeAreaView style={{flex:1}}>
+
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.mainTitle}>Active orders</Text>
@@ -177,6 +185,13 @@ export default function index() {
           </TouchableOpacity>
         </View>
       </View>
+      {isLoading && !refreshing && (
+        <ActivityIndicator
+          style={styles.loadingContainer}
+          size="large"
+          color="#007AFF"
+        />
+      )}
 
       {showDatePicker && (
         <DateTimePicker
@@ -231,13 +246,14 @@ export default function index() {
         )}
       </ScrollView>
     </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FDFDFF" },
   headerContainer: {
-    paddingTop: 60,
+    paddingTop: 20,
     paddingHorizontal: 16,
     paddingBottom: 16,
     backgroundColor: "#fff",
@@ -278,13 +294,13 @@ const styles = StyleSheet.create({
   cardContainer: {
     backgroundColor: "#fff",
     borderRadius: 12,
-   
+
     marginBottom: 12,
     borderWidth: 1,
     borderColor: "#E2E8F0",
     elevation: 1,
   },
-  cardMainRow: { flexDirection: "row", alignItems: "center", padding: 14, },
+  cardMainRow: { flexDirection: "row", alignItems: "center", padding: 14 },
   cardContent: { flex: 1 },
   cardHeader: {
     flexDirection: "row",

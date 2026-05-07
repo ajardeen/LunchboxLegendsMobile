@@ -11,23 +11,22 @@ export default function profile() {
   const { logout } = useAuth();
   const router = useRouter();
 
-   useEffect(() => {
+  useEffect(() => {
     const loadProfile = async () => {
       const stored = await AsyncStorage.getItem("customer");
-      
+
       if (stored) {
         setProfile(JSON.parse(stored));
       }
     };
     loadProfile();
   }, []);
-  if (!profile) {
-  return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <Text>Loading profile...</Text>
-    </View>
-  );
-}
+
+  // if (!profile) {
+  //   return (
+
+  //   );
+  // }
 
   return (
     <View style={styles.container}>
@@ -36,10 +35,21 @@ export default function profile() {
         source={require("../../../assets/profile_bg_icon_group.png")}
         contentFit="cover"
       >
-        <View style={styles.header}>
-          <Text style={styles.name}>{profile.fullName}</Text>
-          <Text style={styles.email}>{profile.email}</Text>
-        </View>
+        {
+          /* Profile Info */
+          !profile ? (
+            <View
+              style={[styles.header, { justifyContent: "center" }]}
+            >
+              <Text>Loading profile...</Text>
+            </View>
+          ) : (
+            <View style={styles.header}>
+              <Text style={styles.name}>{profile.fullName}</Text>
+              <Text style={styles.email}>{profile.email}</Text>
+            </View>
+          )
+        }
       </ImageBackground>
 
       {/* Account Section */}
@@ -61,7 +71,7 @@ export default function profile() {
         </Pressable>
 
         {/* ✅ Order History */}
-        <Pressable
+        {/* <Pressable
           style={styles.row}
           onPress={() => router.navigate("orderHistory")}
         >
@@ -73,10 +83,10 @@ export default function profile() {
             color="#888"
             style={styles.arrow}
           />
-        </Pressable>
+        </Pressable> */}
 
         {/* ✅ Favorites */}
-        <Pressable
+        {/* <Pressable
           style={styles.row}
           onPress={() => router.navigate("favorites")}
         >
@@ -88,7 +98,7 @@ export default function profile() {
             color="#888"
             style={styles.arrow}
           />
-        </Pressable>
+        </Pressable> */}
       </View>
 
       {/* Others Section */}
@@ -134,7 +144,7 @@ export default function profile() {
                 [
                   { text: "Cancel", style: "cancel" },
                   { text: "Logout", style: "destructive", onPress: logout },
-                ]
+                ],
               )
             }
           >
@@ -167,7 +177,12 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
   },
-  name: { fontSize: 22, fontWeight: "700", color: "#000",textTransform: "capitalize"},
+  name: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#000",
+    textTransform: "capitalize",
+  },
   email: {
     fontSize: 14,
     backgroundColor: "#004D4D10",

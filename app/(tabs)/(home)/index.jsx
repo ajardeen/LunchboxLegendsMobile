@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons"; // Ensure expo-icons is installed
 import SubscriptionCard from "../../../components/SubscriptionCard";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useBundleData } from "../../../context/BundleContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
   const { data: bundleData, isLoading, refetch } = useBundleData();
@@ -42,6 +43,8 @@ export default function Home() {
   };
 
   return (
+    <SafeAreaView style={{flex:1}}>
+
     <ScrollView
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
@@ -105,6 +108,8 @@ export default function Home() {
         </View>
       </View>
     </ScrollView>
+    </SafeAreaView>
+
   );
 }
 

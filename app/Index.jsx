@@ -4,11 +4,11 @@ import { ActivityIndicator, View } from "react-native";
 import { useEffect } from "react";
 
 export default function Index() {
-  console.log("index loadded");
+  // console.log("index loadded");
   
   const { userToken, loading } = useAuth();
   useEffect(()=>{
-    console.log("usertoken",userToken);
+    // console.log("usertoken",userToken);
     
   },[userToken])
 

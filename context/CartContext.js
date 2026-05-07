@@ -15,14 +15,14 @@ const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const { customer, isLoading } = useCustomer();
-  console.log("customer", customer);
+  // console.log("customer", customer);
 
 
   const [cartItems, setCartItems] = useState([]);
 
-  useEffect(() => {
-    console.log("cartItems", cartItems);
-  }, [cartItems]);
+  // useEffect(() => {
+  //   console.log("cartItems", cartItems);
+  // }, [cartItems]);
 
   // Use refs to store functions so they don't trigger re-renders
   const listenersRef = useRef(new Set());
@@ -87,10 +87,10 @@ export const CartProvider = ({ children }) => {
   }, []); // Empty dependency array
 
   // 4. Empty cart after pay
-  const emptyCart = useCallback(() => {
-    // setCartItems([]);
-    console.log("Cart cleared");
-  }, []); // Empty dependency array
+  // const emptyCart = useCallback(() => {
+  //   setCartItems([]);
+  //   console.log("Cart cleared");
+  // }, []); 
 
   // --- CALCULATIONS (memoized based on cartItems) ---
   const cartTotals = useMemo(() => {

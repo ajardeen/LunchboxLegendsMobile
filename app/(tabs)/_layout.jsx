@@ -102,6 +102,7 @@ export default function TabsLayout() {
         name="(myCart)"
         options={{
           title: "Cart",
+           href: null,
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? "cart" : "cart-outline"}
@@ -133,6 +134,7 @@ export default function TabsLayout() {
               size={size}
             />
           ),
+          
         }}
         listeners={{
           tabPress: (e) => {

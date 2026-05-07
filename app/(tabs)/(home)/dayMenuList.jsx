@@ -1,17 +1,19 @@
 import { useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import CategoryIcon from "../../../components/CategoryIcon";
 import { useBundleData } from "../../../context/BundleContext";
 
-const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const dayNames = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 
 export default function DayMenuList() {
   const { getBundleById } = useBundleData();
@@ -34,12 +36,12 @@ export default function DayMenuList() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen options={{ 
-        headerTitle: `${dayNames[dayData.dayIndex]} Menu`,
-        headerShadowVisible: false 
-      }} />
-      
-      <ScrollView style={styles.scrollArea} showsVerticalScrollIndicator={false}>
+   
+
+      <ScrollView
+        style={styles.scrollArea}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Day & Menu Title */}
         <View style={styles.headerSection}>
           <Text style={styles.dayText}>{dayNames[dayData.dayIndex]}</Text>
@@ -51,22 +53,30 @@ export default function DayMenuList() {
           <Text style={styles.cardTitle}>Total Nutrition</Text>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{dayData.totalNutrition.calories}</Text>
+              <Text style={styles.statValue}>
+                {dayData.totalNutrition.calories}
+              </Text>
               <Text style={styles.statLabel}>kcal</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{dayData.totalNutrition.protein}g</Text>
+              <Text style={styles.statValue}>
+                {dayData.totalNutrition.protein}g
+              </Text>
               <Text style={styles.statLabel}>Protein</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{dayData.totalNutrition.carbs}g</Text>
+              <Text style={styles.statValue}>
+                {dayData.totalNutrition.carbs}g
+              </Text>
               <Text style={styles.statLabel}>Carbs</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{dayData.totalNutrition.fat}g</Text>
+              <Text style={styles.statValue}>
+                {dayData.totalNutrition.fat}g
+              </Text>
               <Text style={styles.statLabel}>Fats</Text>
             </View>
           </View>
@@ -91,7 +101,9 @@ export default function DayMenuList() {
               </Text>
               <View style={styles.itemNutritionTag}>
                 <MaterialCommunityIcons name="fire" size={12} color="#6B7280" />
-                <Text style={styles.nutritionText}>{menuItem.nutrition.calories} kcal</Text>
+                <Text style={styles.nutritionText}>
+                  {menuItem.nutrition.calories} kcal
+                </Text>
               </View>
             </View>
 
@@ -102,11 +114,13 @@ export default function DayMenuList() {
             </View>
           </View>
         ))}
-        
+
         {/* Quality Note */}
         <View style={styles.footerNote}>
           <Ionicons name="checkmark-circle" size={16} color="#059669" />
-          <Text style={styles.footerNoteText}>Standard portions optimized for health</Text>
+          <Text style={styles.footerNoteText}>
+            Standard portions optimized for health
+          </Text>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -120,8 +134,8 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollArea: {
     flex: 1,
@@ -218,8 +232,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
     marginBottom: 4,
   },
@@ -237,7 +251,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F3F4F6",
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -263,9 +277,9 @@ const styles = StyleSheet.create({
     color: "#004346",
   },
   footerNote: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 10,
     marginBottom: 40,
     gap: 6,
@@ -274,5 +288,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6B7280",
     fontWeight: "500",
-  }
+  },
 });

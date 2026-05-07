@@ -19,7 +19,7 @@ const AddressChangeSheet = ({
   loading, // pass true while fetching
 }) => {
   const handleManageAddress = () => {
-    router.push("/(tabs)/index");
+    router.push("/(tabs)/(profile)/addressScreen");
     onClose();
   };
 
@@ -96,7 +96,7 @@ const AddressChangeSheet = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 15, width: "100%", maxHeight: 350 },
+  container: { flex: 1, paddingHorizontal: 15, width: "100%", maxHeight: 350 ,minWidth:"100%"},
   addressRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -121,7 +121,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#004346",
   },
   textContainer: { flex: 1 },
-  addressTitle: { fontSize: 16, fontWeight: "bold", color: "#333" ,textTransform:"uppercase"},
+  addressTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    textTransform: "uppercase",
+  },
   addressDetail: { fontSize: 14, color: "#666", marginTop: 2 },
   defaultTag: { fontSize: 12, color: "#004346", marginTop: 3 },
   manageButton: {
