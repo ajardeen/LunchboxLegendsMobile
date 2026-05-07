@@ -1,25 +1,58 @@
 import React, { useRef } from "react";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router"; // To get the subscriptionId
 import CustomBottomSheet from "../../../components/UI/CustomBottomSheet";
 import RechargeSheet from "../../../components/RechargeSheet";
 import PauseSheet from "../../../components/PauseSheet";
-
-const SUBSCRIPTION_DETAIL = {
-  id: "sub_1",
-  title: "Lunch Box",
-  subtitle: "Lunch · Halka fulka thali",
-  deliveriesUsed: "22/30",
-  balance: 1220,
-  expiryDate: "02 Oct 2020",
-  reminder: "2 Days before",
-  deliveryInstruction: "Hand it to me",
-};
+import { useSubscriptionById } from "../../../hooks/Order/useCustomerSubscriptions";
+import { useCustomer } from "../../../context/CustomerContext"; // Assuming this is where you get customerId
 
 const ManageSubscription = () => {
+  // 1. Get dynamic IDs
+  const { subscriptionId } = useLocalSearchParams();
+  const { customerId } = useCustomer();
+  console.log("subscriptionId",subscriptionId);
+  console.log("customerId",customerId);
+  
+
+  // 2. Fetch dynamic data
+  const { data: sub, isLoading } = useSubscriptionById(
+    subscriptionId,
+    customerId,
+  );
+  console.log("sub mag",sub);
+  
+
   const rechargeRef = useRef(null);
   const pauseRef = useRef(null);
-  const sub = SUBSCRIPTION_DETAIL;
+
+  // 3. Loading State
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: "center" }]}>
+        <ActivityIndicator size="large" color="#000" />
+      </View>
+    );
+  }
+
+  // 4. Error/Null State
+  if (!sub) {
+    return (
+      <View style={styles.container}>
+        <Text>Subscription not found.</Text>
+      </View>
+    );
+  }
+
+  // Feature Toggle for Showcase (Set to true to disable buttons)
+  const isShowcaseMode = true;
 
   return (
     <View style={styles.container}>
@@ -47,7 +80,8 @@ const ManageSubscription = () => {
 
         <View style={styles.actionRow}>
           <Pressable
-            style={styles.pauseBtn}
+            disabled={isShowcaseMode} // Disabled for showcase
+            style={[styles.pauseBtn, isShowcaseMode && styles.disabledBtn]}
             onPress={() => pauseRef.current?.open()}
           >
             <Ionicons name="pause" size={16} />
@@ -55,7 +89,8 @@ const ManageSubscription = () => {
           </Pressable>
 
           <Pressable
-            style={styles.rechargeBtn}
+            disabled={isShowcaseMode} // Disabled for showcase
+            style={[styles.rechargeBtn, isShowcaseMode && styles.disabledBtn]}
             onPress={() => rechargeRef.current?.open()}
           >
             <Text style={styles.rechargeText}>Recharge</Text>
@@ -82,21 +117,29 @@ const ManageSubscription = () => {
         </View>
       </View>
 
-      <View style={styles.optionDanger}>
+      {/* Disabled for showcase */}
+      <Pressable
+        disabled={isShowcaseMode}
+        style={[styles.optionDanger, isShowcaseMode && { opacity: 0.5 }]}
+      >
         <Ionicons name="close-circle-outline" size={18} color="#d32f2f" />
         <Text style={styles.dangerText}>
           Cancel subscription & refund balance
         </Text>
-      </View>
-      {/* Pause Bottom Sheet */}
-      <CustomBottomSheet ref={pauseRef} title="Select date">
-        <PauseSheet onClose={() => pauseRef.current?.close()} />
-      </CustomBottomSheet>
+      </Pressable>
 
-      {/* Recharge Bottom Sheet */}
-      <CustomBottomSheet ref={rechargeRef} title="Recharge">
-        <RechargeSheet onClose={() => rechargeRef.current?.close()} />
-      </CustomBottomSheet>
+      {/* Bottom Sheets (Only open if not in showcase mode) */}
+      {!isShowcaseMode && (
+        <>
+          <CustomBottomSheet ref={pauseRef} title="Select date">
+            <PauseSheet onClose={() => pauseRef.current?.close()} />
+          </CustomBottomSheet>
+
+          <CustomBottomSheet ref={rechargeRef} title="Recharge">
+            <RechargeSheet onClose={() => rechargeRef.current?.close()} />
+          </CustomBottomSheet>
+        </>
+      )}
     </View>
   );
 };
@@ -109,7 +152,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 16,
   },
-
+  disabledBtn: {
+    opacity: 0.5,
+    backgroundColor: "#ccc",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",

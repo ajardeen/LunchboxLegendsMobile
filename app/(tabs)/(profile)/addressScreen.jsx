@@ -291,7 +291,7 @@ const addressScreen = () => {
                 onValueChange={(itemValue) => setAddressLabel(itemValue)}
                 style={styles.picker}
               >
-                <Picker.Item label="Home" value="home" />
+                <Picker.Item  label="Home" value="home" />
                 <Picker.Item label="Work" value="work" />
                 <Picker.Item label="Custom" value="custom" />
               </Picker>
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     marginBottom: 4,
-    color: "#555",
+    color: "#000000",
   },
   input: {
     borderWidth: 1,
@@ -553,6 +553,8 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     fontSize: 12,
+    color: "#000",
+    paddingHorizontal: 10,
   },
   saveButton: {
     backgroundColor: "#004346",

@@ -87,10 +87,10 @@ export const CartProvider = ({ children }) => {
   }, []); // Empty dependency array
 
   // 4. Empty cart after pay
-  // const emptyCart = useCallback(() => {
-  //   setCartItems([]);
-  //   console.log("Cart cleared");
-  // }, []); 
+  const emptyCart = useCallback(() => {
+    setCartItems([]);
+    // console.log("Cart cleared");
+  }, []); 
 
   // --- CALCULATIONS (memoized based on cartItems) ---
   const cartTotals = useMemo(() => {

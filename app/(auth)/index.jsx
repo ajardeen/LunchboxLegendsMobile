@@ -10,7 +10,7 @@ import { COLORS } from "../../theme/colors";
 import { router } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 
-const Welcome1Screen = () => {
+const index = () => {
   const { loading } = useAuth();
   return (
     <ImageBackground
@@ -27,8 +27,8 @@ const Welcome1Screen = () => {
 
       <TouchableOpacity
         style={styles.nextBtn}
-        // onPress={() => router.push("/Welcome2Screen")}
-        onPress={() => router.push("/(tabs)/(home)")}
+        onPress={() => router.push("/Welcome2Screen")}
+        // onPress={() => router.push("/(tabs)/(home)")}
       >
         <Text style={styles.arrow}>→</Text>
       </TouchableOpacity>
@@ -71,4 +71,4 @@ const styles = StyleSheet.create({
   arrow: { fontSize: 38, color: COLORS.black },
 });
 
-export default Welcome1Screen;
+export default index;

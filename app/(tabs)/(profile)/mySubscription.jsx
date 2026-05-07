@@ -83,7 +83,12 @@ const mySubscription = () => {
             )}
           </View>
         </View>
+        {item.status==="pending_approval"&&
+        <View style={styles.pendingRow}>
+          <Text style={styles.pendingMessage}>Soon Your Order well Placed</Text>
 
+        </View>
+        }
         <View style={styles.buttonRow}>
           <Pressable
             onPress={() =>
@@ -245,4 +250,15 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  pendingRow:{
+  backgroundColor:"#ccc",
+  padding:1,
+  textAlign:"center",
+  justifyContent:"center",
+  alignItems:"center",
+  borderRadius:8
+  },
+  pendingMessage:{
+    fontSize:12
+  }
 });

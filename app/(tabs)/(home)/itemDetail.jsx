@@ -183,7 +183,7 @@ export default function ItemDetail() {
             </CustomPressable>
           );
         })}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
 
       <View style={styles.footer}>
@@ -275,6 +275,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    paddingBottom:50
   },
   insightContainer: {
     flexDirection: "row",

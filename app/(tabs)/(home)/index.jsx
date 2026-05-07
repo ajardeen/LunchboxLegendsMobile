@@ -12,6 +12,9 @@ import SubscriptionCard from "../../../components/SubscriptionCard";
 import { RefreshControl } from "react-native-gesture-handler";
 import { useBundleData } from "../../../context/BundleContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AdBanner from "../../../components/AdBanner";
+import CustomPressable from "../../../components/UI/CustomPressable";
+import { router } from "expo-router";
 
 export default function Home() {
   const { data: bundleData, isLoading, refetch } = useBundleData();
@@ -21,7 +24,7 @@ export default function Home() {
 
   const tabs = ["ALL", "Veg", "Non Veg"];
   const name = "Lunchbox Legends";
-  const location = "Tecci Park";
+  const location = "Chennai, Tamil Nadu, India";
 
   useEffect(() => {
     if (bundleData) {
@@ -32,7 +35,8 @@ export default function Home() {
   const filteredBundles = data.filter((bundle) => {
     if (active === "ALL") return true;
     if (active === "Veg") return bundle.category === "veg";
-    if (active === "Non Veg") return bundle.category === "non-veg" || bundle.category === "mix";
+    if (active === "Non Veg")
+      return bundle.category === "non-veg" || bundle.category === "mix";
     return false;
   });
 
@@ -43,73 +47,91 @@ export default function Home() {
   };
 
   return (
-    <SafeAreaView style={{flex:1}}>
-
-    <ScrollView
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#007AFF"]} />
-      }
-      contentContainerStyle={styles.scrollViewContent}
-    >
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <Text style={[styles.headerTitle, styles.textWhite]}>{name}</Text>
-        <Text style={styles.headerLocation}>📍 {location}</Text>
-      </View>
-
-      {/* Main Content Area */}
-      <View style={styles.filterSection}>
-        {/* Filter Tabs */}
-        <View style={styles.tabsContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {tabs.map((tab) => {
-              const isActive = active === tab;
-              return (
-                <TouchableOpacity
-                  key={tab}
-                  onPress={() => setActive(tab)}
-                  style={[
-                    styles.tabButton,
-                    isActive ? styles.activeTabButton : styles.inactiveTabButton,
-                  ]}
-                >
-                  <Text style={[styles.tabText, isActive ? styles.textWhite : styles.inactiveText]}>
-                    {tab}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007AFF"]}
+          />
+        }
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <Text style={[styles.headerTitle, styles.textWhite]}>{name}</Text>
+          <Text style={styles.headerLocation}>📍 {location}</Text>
+          <AdBanner />
         </View>
 
-        {/* Quality Banner - As per image_6684ca.png */}
-        <View style={styles.qualityBanner}>
-          <View style={styles.shieldIconContainer}>
-            <Ionicons name="shield-checkmark" size={30} color="#059669" />
+        {/* Main Content Area */}
+        <View style={styles.filterSection}>
+          {/* Filter Tabs */}
+          <View style={styles.tabsContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {tabs.map((tab) => {
+                const isActive = active === tab;
+                return (
+                  <TouchableOpacity
+                    key={tab}
+                    onPress={() => setActive(tab)}
+                    style={[
+                      styles.tabButton,
+                      isActive
+                        ? styles.activeTabButton
+                        : styles.inactiveTabButton,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.tabText,
+                        isActive ? styles.textWhite : styles.inactiveText,
+                      ]}
+                    >
+                      {tab}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
-          <Text style={styles.qualityText}>100% safe and best quality meals</Text>
-        </View>
 
-        {/* Item Cards */}
-        <View style={styles.itemCardsContainer}>
-          {isLoading && (
-            <View style={styles.loader}>
-              <ActivityIndicator size="large" color="#004346" />
+          {/* Quality Banner - As per image_6684ca.png */}
+          <View style={styles.qualityBanner}>
+            <View style={styles.shieldIconContainer}>
+              <Ionicons name="shield-checkmark" size={30} color="#059669" />
             </View>
-          )}
-          
-          {filteredBundles.length > 0 ? (
-            filteredBundles.map((item) => (
-              <SubscriptionCard key={item.id} item={item} />
-            ))
-          ) : !isLoading && (
-            <Text style={styles.emptyText}>No bundles available in this category.</Text>
-          )}
-        </View>
-      </View>
-    </ScrollView>
-    </SafeAreaView>
+            <CustomPressable
+              onPress={() => router.push("(profile)/profileDetails")}
+            >
+              <Text style={styles.qualityText}>
+                100% safe and best quality meals
+              </Text>
+            </CustomPressable>
+          </View>
 
+          {/* Item Cards */}
+          <View style={styles.itemCardsContainer}>
+            {isLoading && (
+              <View style={styles.loader}>
+                <ActivityIndicator size="large" color="#004346" />
+              </View>
+            )}
+
+            {filteredBundles.length > 0
+              ? filteredBundles.map((item) => (
+                  <SubscriptionCard key={item.id} item={item} />
+                ))
+              : !isLoading && (
+                  <Text style={styles.emptyText}>
+                    No bundles available in this category.
+                  </Text>
+                )}
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -120,7 +142,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 30,
     paddingBottom: 20,
   },
   headerTitle: {
@@ -168,19 +190,19 @@ const styles = StyleSheet.create({
   inactiveText: {
     color: "#4B5563",
   },
-  
+
   // Quality Banner Styling from image_6684ca.png
   qualityBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ECFDF5', // Light green bg
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ECFDF5", // Light green bg
     marginHorizontal: 16,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 12,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#D1FAE5',
+    borderColor: "#D1FAE5",
   },
   shieldIconContainer: {
     marginRight: 10,
@@ -200,9 +222,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   emptyText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 30,
-    color: '#6B7280',
+    color: "#6B7280",
     fontSize: 14,
-  }
+  },
 });

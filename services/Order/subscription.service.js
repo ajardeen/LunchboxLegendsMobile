@@ -11,3 +11,10 @@ export const getCustomerSubscriptionsApi = async (customerId) => {
   return data.data;
 };
 
+export const getSubscriptionDetail = async (subscriptionId, customerId) => {
+  //  console.log("callign serv");
+  const { data } = await API.get(`/subscriptions/${subscriptionId}/customer/${customerId}`);
+  // console.log("data",data);
+  
+  return data.data; 
+};
