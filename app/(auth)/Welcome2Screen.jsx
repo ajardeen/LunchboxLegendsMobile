@@ -41,125 +41,96 @@ const Welcome2Screen = () => {
 
   // temp auth data
   const [tempUserData, setTempUserData] = useState(null);
-
+  const [devOtp, setDevOtp] = useState(null); // ⚠️ dev only
   /**
    * Register
    */
-  const { mutate: register, isPending: isRegistering } =
-    useAuthRegister({
-      onSuccess: (data) => {
-        setTempUserData({
-          email,
-          userId: data?.userId,
-        });
+  const { mutate: register, isPending: isRegistering } = useAuthRegister({
+    // Register onSuccess
+    onSuccess: (data) => {
+      // console.log(data);
 
-        setIsOtpStep(true);
+      setTempUserData({
+        email,
+        userId: data?.userId,
+      });
+      setDevOtp(data?.otp ?? null); // ⚠️ dev only
+      setIsOtpStep(true);
+      Alert.alert("OTP Sent", "Verification code sent to your email");
+    },
 
-        Alert.alert(
-          "OTP Sent",
-          "Verification code sent to your email"
-        );
-      },
-
-      onError: (err) => {
-        Alert.alert(
-          "Registration Error",
-          err?.response?.data?.message ||
-            "Something went wrong"
-        );
-      },
-    });
+    onError: (err) => {
+      Alert.alert(
+        "Registration Error",
+        err?.response?.data?.message || "Something went wrong",
+      );
+    },
+  });
 
   /**
    * Login
    */
-  const { mutate: loginAttempt, isPending: isLoggingIn } =
-    useAuthLogin({
-      onSuccess: (data) => {
-        setTempUserData({
-          email,
-          userId: data?.userId,
-        });
+  const { mutate: loginAttempt, isPending: isLoggingIn } = useAuthLogin({
+    // Login onSuccess
+    onSuccess: (data) => {
+      //  console.log(data);
+      setTempUserData({
+        email,
+        userId: data?.userId,
+      });
+      setDevOtp(data?.otp ?? null); // ⚠️ dev only
+      setIsOtpStep(true);
+      Alert.alert("OTP Sent", "Login verification code sent to your email");
+    },
 
-        setIsOtpStep(true);
+    onError: (err) => {
+      console.log(err);
 
-        Alert.alert(
-          "OTP Sent",
-          "Login verification code sent to your email"
-        );
-      },
-
-      onError: (err) => {
-        Alert.alert(
-          "Login Error",
-          err?.response?.data?.message ||
-            "Invalid credentials"
-        );
-      },
-    });
+      Alert.alert(
+        "Login Error",
+        err?.response?.data?.message || "Invalid credentials",
+      );
+    },
+  });
 
   /**
    * Verify OTP
    */
-  const { mutate: verifyOtp, isPending: isVerifyingOtp } =
-    useAuthVerifyOtp({
-      onSuccess: async (res) => {
-        await contextLogin(
-          res?.token,
-          res?.customer
-        );
+  const { mutate: verifyOtp, isPending: isVerifyingOtp } = useAuthVerifyOtp({
+    onSuccess: async (res) => {
+      await contextLogin(res?.token, res?.customer);
 
-        Alert.alert(
-          "Success",
-          "Authenticated successfully"
-        );
-      },
+      Alert.alert("Success", "Authenticated successfully");
+    },
 
-      onError: (err) => {
-        Alert.alert(
-          "OTP Error",
-          err?.response?.data?.message ||
-            "Invalid OTP"
-        );
-      },
-    });
+    onError: (err) => {
+      Alert.alert("OTP Error", err?.response?.data?.message || "Invalid OTP");
+    },
+  });
 
   /**
    * Resend OTP
    */
-  const { mutate: resendOtp, isPending: isResendingOtp } =
-    useAuthResendOtp({
-      onSuccess: () => {
-        Alert.alert(
-          "OTP Sent",
-          "New OTP sent to your email"
-        );
-      },
+  const { mutate: resendOtp, isPending: isResendingOtp } = useAuthResendOtp({
+    onSuccess: () => {
+      Alert.alert("OTP Sent", "New OTP sent to your email");
+    },
 
-      onError: (err) => {
-        Alert.alert(
-          "Error",
-          err?.response?.data?.message ||
-            "Failed to resend OTP"
-        );
-      },
-    });
+    onError: (err) => {
+      Alert.alert(
+        "Error",
+        err?.response?.data?.message || "Failed to resend OTP",
+      );
+    },
+  });
 
   /**
    * Initial Submit
    */
   const handleInitialSubmit = () => {
     if (mode === "signup") {
-      if (
-        !fullName ||
-        !phone ||
-        !email ||
-        !password
-      ) {
-        return Alert.alert(
-          "Error",
-          "All fields are required"
-        );
+      if (!fullName || !phone || !email || !password) {
+        return Alert.alert("Error", "All fields are required");
       }
 
       register({
@@ -170,10 +141,7 @@ const Welcome2Screen = () => {
       });
     } else {
       if (!email || !password) {
-        return Alert.alert(
-          "Error",
-          "Email and password are required"
-        );
+        return Alert.alert("Error", "Email and password are required");
       }
 
       loginAttempt({
@@ -188,10 +156,7 @@ const Welcome2Screen = () => {
    */
   const handleVerifyOTP = () => {
     if (!otp || otp.length < 5) {
-      return Alert.alert(
-        "Error",
-        "Enter valid OTP"
-      );
+      return Alert.alert("Error", "Enter valid OTP");
     }
 
     verifyOtp({
@@ -214,14 +179,39 @@ const Welcome2Screen = () => {
    */
   const renderOTPForm = () => (
     <View style={styles.formContainer}>
-      <Text style={styles.otpTitle}>
-        Verify OTP
-      </Text>
+      <Text style={styles.otpTitle}>Verify OTP</Text>
 
       <Text style={styles.otpSubtitle}>
         Enter OTP sent to {tempUserData?.email}
       </Text>
-
+      {/* ⚠️ DEV ONLY — remove in production */}
+      {devOtp && (
+        <View
+          style={{
+            backgroundColor: "#fff3cd",
+            borderColor: "#ffc107",
+            borderWidth: 1,
+            borderRadius: 8,
+            padding: 10,
+            marginBottom: 12,
+          }}
+        >
+          <Text style={{ color: "#856404", fontSize: 12, fontWeight: "600" }}>
+           ⚠️ Developer Note: SMTP services are disabled on Render's free tier. For this demo, the OTP is displayed directly in the UI for testing purposes. This application is a technical showcase and is not intended for production use.
+          </Text>
+          <Text
+            style={{
+              color: "#856404",
+              fontSize: 18,
+              fontWeight: "bold",
+              textAlign: "center",
+              marginTop: 4,
+            }}
+          >
+            OTP: {devOtp}
+          </Text>
+        </View>
+      )}
       <TextInput
         style={styles.input}
         placeholder="Enter OTP"
@@ -239,33 +229,20 @@ const Welcome2Screen = () => {
         disabled={isVerifyingOtp}
       >
         {isVerifyingOtp ? (
-          <ActivityIndicator
-            color={COLORS.white}
-          />
+          <ActivityIndicator color={COLORS.white} />
         ) : (
-          <Text style={styles.submitText}>
-            Verify & Login
-          </Text>
+          <Text style={styles.submitText}>Verify & Login</Text>
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={handleResendOtp}
-        disabled={isResendingOtp}
-      >
+      <TouchableOpacity onPress={handleResendOtp} disabled={isResendingOtp}>
         <Text style={styles.linkText}>
-          {isResendingOtp
-            ? "Sending..."
-            : "Resend OTP"}
+          {isResendingOtp ? "Sending..." : "Resend OTP"}
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={() => setIsOtpStep(false)}
-      >
-        <Text style={styles.linkText}>
-          Back
-        </Text>
+      <TouchableOpacity onPress={() => setIsOtpStep(false)}>
+        <Text style={styles.linkText}>Back</Text>
       </TouchableOpacity>
     </View>
   );
@@ -318,32 +295,19 @@ const Welcome2Screen = () => {
       <TouchableOpacity
         style={styles.submitBtn}
         onPress={handleInitialSubmit}
-        disabled={
-          isRegistering || isLoggingIn
-        }
+        disabled={isRegistering || isLoggingIn}
       >
-        {isRegistering ||
-        isLoggingIn ? (
-          <ActivityIndicator
-            color={COLORS.white}
-          />
+        {isRegistering || isLoggingIn ? (
+          <ActivityIndicator color={COLORS.white} />
         ) : (
           <Text style={styles.submitText}>
-            {mode === "login"
-              ? "Get Login OTP"
-              : "Register"}
+            {mode === "login" ? "Get Login OTP" : "Register"}
           </Text>
         )}
       </TouchableOpacity>
 
       <TouchableOpacity
-        onPress={() =>
-          setMode(
-            mode === "login"
-              ? "signup"
-              : "login"
-          )
-        }
+        onPress={() => setMode(mode === "login" ? "signup" : "login")}
       >
         <Text style={styles.linkText}>
           {mode === "login"
@@ -356,18 +320,11 @@ const Welcome2Screen = () => {
 
   return (
     <LinearGradient
-      colors={[
-        COLORS.primary,
-        COLORS.black,
-      ]}
+      colors={[COLORS.primary, COLORS.black]}
       style={styles.container}
     >
       <KeyboardAvoidingView
-        behavior={
-          Platform.OS === "ios"
-            ? "padding"
-            : "height"
-        }
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView
@@ -377,13 +334,9 @@ const Welcome2Screen = () => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.centerContent}>
-            <Text style={styles.title}>
-              Lunchbox Legends
-            </Text>
+            <Text style={styles.title}>Lunchbox Legends</Text>
 
-            <Text style={styles.subtitle}>
-              Home food isn’t far anymore
-            </Text>
+            <Text style={styles.subtitle}>Home food isn’t far anymore</Text>
           </View>
 
           {isOtpStep ? (
@@ -394,24 +347,16 @@ const Welcome2Screen = () => {
             <View style={styles.bottomButtons}>
               <TouchableOpacity
                 style={styles.darkBtn}
-                onPress={() =>
-                  setMode("signup")
-                }
+                onPress={() => setMode("signup")}
               >
-                <Text style={styles.darkBtnText}>
-                  Sign up
-                </Text>
+                <Text style={styles.darkBtnText}>Sign up</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.whiteBtn}
-                onPress={() =>
-                  setMode("login")
-                }
+                onPress={() => setMode("login")}
               >
-                <Text style={styles.whiteBtnText}>
-                  Log in
-                </Text>
+                <Text style={styles.whiteBtnText}>Log in</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -495,8 +440,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    backgroundColor:
-      "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.9)",
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
