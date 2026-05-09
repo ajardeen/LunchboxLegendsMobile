@@ -31,7 +31,8 @@ export default function Home() {
       setData(bundleData);
     }
   }, [bundleData]);
-
+  console.log("data",data);
+  
   const filteredBundles = data.filter((bundle) => {
     if (active === "ALL") return true;
     if (active === "Veg") return bundle.category === "veg";

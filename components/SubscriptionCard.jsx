@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Text, StyleSheet, Platform } from "react-native";
 import { Image } from "expo-image";
 import { View } from "react-native";
@@ -8,7 +8,7 @@ import CustomPressable from "./UI/CustomPressable";
 
 export default function SubscriptionCard({ item }) {
   // console.log("item",item);
-  
+const [imageError, setImageError] = useState  (false);
   const router = useRouter();
   const placeholderImage = require("../assets/lblplaceholder.jpg");
 
@@ -30,17 +30,26 @@ export default function SubscriptionCard({ item }) {
       },
     });
   };
+  // Add this helper inside your component or globally
+  const secureUri = item.imgUrl
+    ? item.imgUrl.replace("http://", "https://")
+    : null;
 
   return (
     <CustomPressable onPress={goToDetail}>
       <View style={styles.card}>
-        <Image
+      <Image
           source={
-            item.imgUrl ? { uri: item.imgUrl } : placeholderImage
+            // 3. Logic: If no URL OR if an error occurred, use placeholder
+            (!secureUri || imageError) 
+              ? placeholderImage 
+              : { uri: secureUri }
           }
           style={styles.cardImage}
           contentFit="cover"
           transition={300}
+          // 4. This triggers when the 404 happens
+          onError={() => setImageError(true)} 
         />
 
         <View style={styles.bottomContent}>

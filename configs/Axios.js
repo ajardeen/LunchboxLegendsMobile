@@ -4,7 +4,7 @@ const url = process.env.EXPO_PUBLIC_API_URL;
 
 const API = axios.create({
   // local development url
-  // baseURL: "http://10.155.60.219:3000/api",
+  // baseURL: "http://10.155.60.215:3000/api",
   baseURL: url,
 });
 
